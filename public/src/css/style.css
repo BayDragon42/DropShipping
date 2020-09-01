@@ -1,0 +1,88 @@
+html {
+	font-family: Arial;
+}
+
+body {
+	margin: 0rem;
+	padding-top: 2.3125rem;
+}
+
+a {
+	text-decoration: none;
+	color: #ddd;
+}
+
+/***************************************************************
+|                         mobile phones                        |
+***************************************************************/
+#container {
+	width: 100%;
+}
+
+#header {
+	position: fixed;
+	top: 0;
+	width: 100%;
+	display: flex;
+	justify-content: space-between;
+	background-color: black;
+	color: #ddd;
+	z-index: 999;
+}
+
+#header div {
+	margin: 0.625rem;
+}
+
+#content {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	margin: 1rem;
+}
+
+.anchor {
+	position: absolute;
+	left: 0;
+	top: 0;
+}
+
+#content div {
+	margin-bottom: 1rem;
+	text-align: center;
+}
+
+#footer {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	background-color: black;
+	color: #ddd;
+	padding: 0 3.125rem;
+}
+
+#footer div span {
+	text-align: center;
+}
+
+#footer :first-child {
+	margin-top: 0.625rem;
+}
+
+#footer :last-child {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+#footer :nth-child(odd) span {
+	font-weight: bold;
+}
+
+#footer :nth-child(even) {
+	margin-bottom: 1.25rem;
+}
+
+#footer :last-child a {
+	margin-bottom: 0.3125rem;
+}
