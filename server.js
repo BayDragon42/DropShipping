@@ -1,4 +1,5 @@
 const port = 8080;
+const hostname = "testgva.netlify.app";
 
 const express = require("express");
 const path = require("path");
@@ -30,6 +31,6 @@ server.use(express.static(path.join(__dirname, 'public')), (req, res) => {
 	res.redirect("/");
 });
 
-server.listen(port, () => {
+server.listen(port, hostname, () => {
 	console.log(`Server running at http://localhost:${port}/`);
 });
