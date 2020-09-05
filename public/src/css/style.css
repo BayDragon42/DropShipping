@@ -1,14 +1,26 @@
 html {
 	font-family: Arial;
+  background-color: #222;
 }
 
 body {
 	margin: 0rem;
-	padding-top: 2.3125rem;
+	padding-top: 2.5625rem;
 }
 
 a {
+  max-height: 1.125rem;
 	text-decoration: none;
+	color: #ddd;
+  font-size: 1rem;
+  transition: font-size 0.125s ease-in-out;
+}
+
+a:hover {
+  font-size: 1.03125rem;
+}
+
+#header, #footer span {
 	color: #ddd;
 }
 
@@ -19,32 +31,132 @@ a {
 	width: 100%;
 }
 
+#menu {
+  position: fixed;
+  top: 100%;
+  width: 100%;
+  height: 100%;
+  z-index: 999;
+  transition: top 0.4s cubic-bezier(0.32, 0.66, 0.38, 1);
+  color: #ddd;
+  background-color: #222;
+}
+
+#menu > div {
+  margin: 1rem;
+}
+
+.nav-open {
+  top: 2.5625rem !important;
+}
+
 #header {
 	position: fixed;
 	top: 0;
 	width: 100%;
+  height: 2.5625rem;
 	display: flex;
-	justify-content: space-between;
-	background-color: black;
-	color: #ddd;
+	justify-content: center;
+  align-items: center;
 	z-index: 999;
+  background-color: #222;
+  border-bottom: solid 0.0625rem #333;
 }
 
-#header div {
-	margin: 0.625rem;
+#header > div:first-child {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  left: 0;
+}
+
+#header > div:first-child div {
+  margin: 0.625rem;
+}
+
+.nav-button {
+	width: 2.125rem;
+  height: 1.3125rem;
+	display: block;
+	cursor: pointer;
+	margin: auto 0;
+	
+	-webkit-transform: rotate(0deg);
+	-moz-transform: rotate(0deg);
+	-o-transform: rotate(0deg);
+	transform: rotate(0deg);
+	-webkit-transition: .5s ease-in-out;
+	-moz-transition: .5s ease-in-out;
+	-o-transition: .5s ease-in-out;
+	transition: .5s ease-in-out;
+}
+
+.nav-button span {
+	display: block;
+	position: absolute;
+	height: 0.1875rem;
+	width: 100%;
+	background: #ddd;
+	border-radius: 0.4375rem;
+	left: 0;
+	
+	-webkit-transform: rotate(0deg);
+	-moz-transform: rotate(0deg);
+	-o-transform: rotate(0deg);
+	transform: rotate(0deg);
+	-webkit-transition: .25s ease-in-out;
+	-moz-transition: .25s ease-in-out;
+	-o-transition: .25s ease-in-out;
+	transition: .25s ease-in-out;
+}
+
+.nav-button span:nth-child(1) {
+	top: 0;
+}
+
+.nav-button span:nth-child(2), .nav-button span:nth-child(3) {
+	top: 0.5625rem;
+}
+
+.nav-button span:nth-child(4) {
+	top: 1.125em;
+}
+
+.nav-button.open span:nth-child(1) {
+	top: 0.5625rem;
+	width: 0%;
+	left: 50%;
+}
+
+.nav-button.open span:nth-child(2) {
+	-webkit-transform: rotate(45deg);
+	-moz-transform: rotate(45deg);
+	-o-transform: rotate(45deg);
+	transform: rotate(45deg);
+}
+
+.nav-button.open span:nth-child(3) {
+	-webkit-transform: rotate(-45deg);
+	-moz-transform: rotate(-45deg);
+	-o-transform: rotate(-45deg);
+	transform: rotate(-45deg);
+}
+
+.nav-button.open span:nth-child(4) {
+	top: 0.5625rem;
+	width: 0%;
+	left: 50%;
 }
 
 #content {
 	position: relative;
 	display: flex;
 	flex-direction: column;
-	margin: 1rem;
-}
-
-.anchor {
-	position: absolute;
-	left: 0;
-	top: 0;
+	padding: 1rem;
+	color: #ddd;
 }
 
 #content div {
@@ -56,9 +168,8 @@ a {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	background-color: black;
-	color: #ddd;
 	padding: 0 3.125rem;
+  border-top: solid 0.0625rem #333;
 }
 
 #footer div span {

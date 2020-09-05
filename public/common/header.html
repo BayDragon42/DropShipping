@@ -1,9 +1,21 @@
 <div>
-	<span>Menu</span>
+  <div class="nav-button">
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+  <div>
+    <span>Panier et autres</span>
+  </div>
 </div>
+<script>
+  let elem = document.getElementsByClassName("nav-button")[0];
+  elem.addEventListener("click", () => {
+    elem.classList.toggle("open");
+    document.getElementById("menu").classList.toggle("nav-open");
+  });
+</script>
 <div>
-	<span>logo</span>
-</div>
-<div>
-	<span>Panier</span>
+  <span>logo</span>
 </div>
