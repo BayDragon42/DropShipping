@@ -1,6 +1,6 @@
 html {
 	font-family: Arial;
-  background-color: #222;
+	background-color: #222;
 }
 
 body {
@@ -9,19 +9,77 @@ body {
 }
 
 a {
-  max-height: 1.125rem;
+	max-height: 1.125rem;
 	text-decoration: none;
 	color: #ddd;
-  font-size: 1rem;
-  transition: font-size 0.125s ease-in-out;
+	font-size: 1rem;
+	transition: font-size 0.125s ease-in-out;
 }
 
 a:hover {
-  font-size: 1.03125rem;
+	font-size: 1.03125rem;
 }
 
 #header, #footer span {
 	color: #ddd;
+}
+
+/***************************************************************
+|                         Custom Selects                       |
+***************************************************************/
+/*the container must be positioned relative:*/
+.custom-select {
+	position: relative;
+	width: 5rem;
+	font-family: Arial;
+}
+
+.custom-select select {
+	display: none; /*hide original SELECT element:*/
+}
+
+.select-selected {
+	background-color: #333;
+}
+
+.select-selected > span {
+	width: 100%;
+}
+
+.select-selected > img {
+	width: 0.625rem;
+	height: 0.625rem;
+	margin-right: 0.3125rem;
+}
+
+/*style the items (options), including the selected item:*/
+.select-items div, .select-selected {
+	display: flex;
+	justify-content: space-around;
+	align-items: center;
+	color: #ddd;
+	padding: 0.625rem 0rem;
+	cursor: pointer;
+	user-select: none;
+}
+
+/*style items (options):*/
+.select-items {
+	position: absolute;
+	background-color: #333;
+	top: 100%;
+	left: 0;
+	right: 0;
+	z-index: 99;
+}
+
+/*hide the items when the select box is closed:*/
+.select-hide {
+	display: none;
+}
+
+.select-items div:hover, .same-as-selected {
+	background-color: rgba(0, 0, 0, 0.1);
 }
 
 /***************************************************************
@@ -32,58 +90,68 @@ a:hover {
 }
 
 #menu {
-  position: fixed;
-  top: 100%;
-  width: 100%;
-  height: 100%;
-  z-index: 999;
-  transition: top 0.4s cubic-bezier(0.32, 0.66, 0.38, 1);
-  color: #ddd;
-  background-color: #222;
+	position: fixed;
+	top: 100%;
+	width: 100%;
+	height: 100%;
+	z-index: 999;
+	transition: top 0.4s cubic-bezier(0.32, 0.66, 0.38, 1);
+	color: #ddd;
+	background-color: #222;
 }
 
 #menu > div {
-  margin: 1rem;
+	padding: 0.5rem 1rem;
+}
+
+.subMenu {
+	list-style: none;
+	margin: 0rem;
+	padding-left: 2rem;
+}
+
+.subMenu > li {
+	padding: 0.5rem;
 }
 
 .nav-open {
-  top: 2.5625rem !important;
+	top: 2.5625rem !important;
 }
 
 #header {
 	position: fixed;
 	top: 0;
 	width: 100%;
-  height: 2.5625rem;
+	height: 2.5625rem;
 	display: flex;
 	justify-content: center;
-  align-items: center;
+	align-items: center;
 	z-index: 999;
-  background-color: #222;
-  border-bottom: solid 0.0625rem #333;
+	background-color: #222;
+	border-bottom: solid 0.0625rem #333;
 }
 
 #header > div:first-child {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  left: 0;
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	left: 0;
 }
 
 #header > div:first-child div {
-  margin: 0.625rem;
+	margin: 0.625rem;
 }
 
 .nav-button {
 	width: 2.125rem;
-  height: 1.3125rem;
+	height: 1.3125rem;
 	display: block;
 	cursor: pointer;
 	margin: auto 0;
-	
+
 	-webkit-transform: rotate(0deg);
 	-moz-transform: rotate(0deg);
 	-o-transform: rotate(0deg);
@@ -102,7 +170,7 @@ a:hover {
 	background: #ddd;
 	border-radius: 0.4375rem;
 	left: 0;
-	
+
 	-webkit-transform: rotate(0deg);
 	-moz-transform: rotate(0deg);
 	-o-transform: rotate(0deg);
@@ -155,13 +223,34 @@ a:hover {
 	position: relative;
 	display: flex;
 	flex-direction: column;
+	align-items: center;
 	padding: 1rem;
 	color: #ddd;
 }
 
-#content div {
+#content > div {
+	display: flex;
+	flex-direction: column;
 	margin-bottom: 1rem;
 	text-align: center;
+}
+
+#newLocFile {
+	width: 100%;
+	margin: 0rem 0.625rem;
+}
+
+.element {
+	display: flex;
+	flex-direction: column !important;
+	width: 100%;
+	margin: 0rem 0.625rem;
+}
+
+.element > div {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
 }
 
 #footer {
@@ -169,7 +258,7 @@ a:hover {
 	flex-direction: column;
 	align-items: center;
 	padding: 0 3.125rem;
-  border-top: solid 0.0625rem #333;
+	border-top: solid 0.0625rem #333;
 }
 
 #footer div span {

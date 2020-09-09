@@ -1,9 +1,12 @@
+const logsHandler = require("../logs/logs_handler.js");
 const messages = require("./requests_messages.js");
 const users = require("../users/user_handler.js");
 var usersHandler = new users();
 
 const moment = require("moment");
 const jwt = require("jwt-simple");
+const fs = require("fs");
+const path = require("path");
 
 const adminPassword = "youkoulélé";
 const key = "oMim5OMvkTr-dUMpSfhOvZY-mHcf1UMdVSqJFoM0a4k6HxxiCzT2JRo_kmHRBgT5bk08kvR5ANAhDIvVFkGDq0B82hvGCHHeGaz2XrsJw5o6CUsYdOZeTyjje65zF1HPd6LvSq1rJUX-fW9QrdGOLuojP7arMxKOCRk0qXaiJsk";
@@ -25,8 +28,9 @@ class Requests {
 						exp: expires
 					}, key);
 					
-					usersHandler.addUser(token, credentials.user_id, session, credentials.expire);
+					usersHandler.addUser(token, credentials.user_id, session, expires);
 					
+					logsHandler.log("User '" + credentials.user_id + "' logged in.");
 					callback({
 						msg: messages.LOGIN_SUCCESS,
 						payload: {
@@ -35,25 +39,114 @@ class Requests {
 						}
 					});
 				} else {
-					console.log("wrong password");
+					logsHandler.log("User '" + credentials.user_id + "' tried to log in.");
+					callback({
+						msg: messages.LOGIN_PASSWORD_ERROR,
+						payload: {
+							token: token,
+							expires: expires
+						}
+					});
 				}
 			} else {
-				console.log("User does not exists");
+				callback({
+					msg: messages.LOGIN_USERNAME_ERROR,
+					payload: {
+						token: token,
+						expires: expires
+					}
+				});
 			}
 		});
 	}
 
 	verifyCredentials(token, callback) {
 		if(token) {
-			var user = usersHandler.findUser(token)
+			var user = usersHandler.findUser(token);
 			if(user != undefined) {
 				if(!user.isExpired() && user.token == token) {
-					callback(true);
+					callback(messages.VERIFY_CREDENTIALS_SUCCESS);
+				} else {
+					logsHandler.log("Token '" + token + "' has expired");
+					callback({
+						msg: messages.VERIFY_CREDENTIALS_ERROR,
+						err: "Token has expired"
+					});
 				}
+			} else {
+				logsHandler.log("Token '" + token + "' not registered");
+				callback({
+					msg: messages.VERIFY_CREDENTIALS_ERROR,
+					err: "User not found"
+				});
 			}
+		} else {
+			callback({
+				msg: messages.VERIFY_CREDENTIALS_ERROR,
+				err: "Token is undefined"
+			});
 		}
-		
-		callback(false);
+	}
+	
+	keepAlive(token, callback) {
+		var user = usersHandler.findUser(token);
+		if(user != undefined) {
+			var expires = moment().add(10, "minutes").valueOf();
+			
+			user.setExpire(expires);
+			
+			callback({
+				msg: messages.SESSION_KEEP_ALIVE_SUCCESS,
+				payload: {
+					token: token
+				}
+			});
+		} else {
+			callback({
+				msg: messages.SESSION_KEEP_ALIVE_ERROR,
+				err: "token session not found"
+			});
+		}
+	}
+	
+	getFilesFromPath(dir, callback) {
+		fs.readdir(path.join(__dirname.split("/").slice(0, -1).join("/"), dir), function(err, files) {
+			if(!err) {
+				callback({
+					msg: messages.GET_FILES_FROM_PATH_SUCCESS,
+					payload: {
+						files: files.map(x => x.split(".")[0])
+					}
+				});
+			} else {
+				callback({
+					msg: messages.GET_FILES_FROM_PATH_ERROR,
+					payload: {
+						err: err
+					}
+				});
+			}
+		});
+	}
+	
+	getFileContent(pth, callback) {
+		fs.readFile(path.join(__dirname.split("/").slice(0, -1).join("/"), pth + ".json"), function(err, data) {
+			if(!err) {
+				callback({
+					msg: messages.GET_FILE_CONTENT_SUCCESS,
+					payload: {
+						content: JSON.parse(data)
+					}
+				})
+			} else {
+				callback({
+					msg: messages.GET_FILE_CONTENT_ERROR,
+					payload: {
+						err: err
+					}
+				})
+			}
+		});
 	}
   
 	parseRequest(content, callback) {
@@ -63,8 +156,27 @@ class Requests {
 					callback(result);
 				});
 				break;
+			
 			case messages.VERIFY_CREDENTIALS_REQUEST:
-				this.verifyCredentials(content.payload.token, function(result) {
+				this.verifyCredentials(content.token, function(result) {
+					callback(result);
+				});
+				break;
+			
+			case messages.SESSION_KEEP_ALIVE_REQUEST:
+				this.keepAlive(content.payload.token, function(result) {
+					callback(result);
+				});
+				break;
+			
+			case messages.GET_FILES_FROM_PATH_REQUEST:
+				this.getFilesFromPath(content.payload.dir, function(result) {
+					callback(result);
+				});
+				break;
+			
+			case messages.GET_FILE_CONTENT_REQUEST:
+				this.getFileContent(content.payload.pth, function(result) {
 					callback(result);
 				});
 				break;

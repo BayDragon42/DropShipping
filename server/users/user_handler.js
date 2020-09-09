@@ -1,6 +1,15 @@
+const cron = require("node-cron");
+
 class UsersHandler {
 	constructor() {
 		this.users = {};
+		cron.schedule("*/1 * * * *", () => {
+			for(var k in this.users) {
+				if(Date.now() > this.users[k].expire) {
+					this.removeUser(this.users[k].token);
+				}
+			}
+		});
 	}
 	
 	addUser(token, user_id, session, expire) {
@@ -34,6 +43,10 @@ class User {
 		}
 
 		return false;
+	}
+	
+	setExpire(date) {
+		this.expire = date;
 	}
 }
 
