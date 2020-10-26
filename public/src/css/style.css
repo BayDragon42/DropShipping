@@ -1,11 +1,32 @@
 html {
-	font-family: Arial;
+	height: 100%;
+	font-family: Arial, Helvetica, "Liberation Sans", FreeSans, sans-serif;
 	background-color: #222;
 }
 
 body {
+	height: 100%;
 	margin: 0rem;
-	padding-top: 2.5625rem;
+	overflow-y: overlay;
+	overflow-x: hidden;
+}
+
+p {
+	font-size: 0.8125rem;
+	text-align: justify;
+}
+
+::-webkit-scrollbar {
+	width: 1rem;
+}
+
+::-webkit-scrollbar-track {
+	border-radius: 0.625rem;
+}
+
+::-webkit-scrollbar-thumb {
+	background: rgba(255, 255, 255, 0.05);
+	border-radius: 0.625rem;
 }
 
 a {
@@ -24,12 +45,92 @@ a:hover {
 	color: #ddd;
 }
 
+input {
+	height: 2rem;
+	background-color: #333;
+	padding: 0rem 0.625rem;
+	border: none;
+	border-bottom: 0.0625rem solid #ddd;
+	border-radius: 0.625rem;
+	color: #ddd;
+	outline: none;
+}
+
+button {
+	height: 2rem;
+	background-color: #333;
+	border: none;
+	border-radius: 0.625rem;
+	color: #ddd;
+	outline: none;
+}
+
+textarea {
+	font-family: inherit;
+	background-color: #333;
+	border: 0.0625rem solid #ddd;
+	border-radius: 0.625rem;
+	padding: 0.3125rem;
+	color: #ddd;
+	outline: none;
+	resize: none;
+}
+
+/***************************************************************
+|                       Custom Image Selects                   |
+***************************************************************/
+.custom-img-select {
+	display: flex;
+	width: 100%;
+	height: 11rem;
+	background-color: #333;
+	border: 0.0625rem solid #ddd;
+	border-radius: 0.625rem;
+	padding: 0.3125rem;
+	color: #ddd;
+	overflow-x: scroll;
+}
+
+.custom-img-select > div {
+	width: 10rem;
+	height: 10rem;
+	padding: 0rem 0.625rem;
+}
+
+.custom-img-select > div > img:nth-child(1) {
+	width: 10rem;
+	height: 10rem;
+	object-fit: contain;
+}
+
+.custom-img-select > div > img:nth-child(2) {
+	position: relative;
+	height: 1.625rem;
+	width: 1.625rem;
+	bottom: 10rem;
+	right: 3.375rem;
+}
+
+.custom-img-select > div > img:nth-child(3) {
+	position: relative;
+	height: 1.625rem;
+	width: 1.625rem;
+	bottom: 10rem;
+	left: 4.375rem;
+}
+
+.img-select {
+	position: absolute;
+	top: -100%;
+}
+
 /***************************************************************
 |                         Custom Selects                       |
 ***************************************************************/
 /*the container must be positioned relative:*/
 .custom-select {
 	position: relative;
+	height: 2rem;
 	width: 5rem;
 	font-family: Arial;
 }
@@ -56,9 +157,9 @@ a:hover {
 .select-items div, .select-selected {
 	display: flex;
 	justify-content: space-around;
+	height: 2rem;
 	align-items: center;
 	color: #ddd;
-	padding: 0.625rem 0rem;
 	cursor: pointer;
 	user-select: none;
 }
@@ -82,11 +183,27 @@ a:hover {
 	background-color: rgba(0, 0, 0, 0.1);
 }
 
+.disabled {
+	background-color: #999 !important;
+	color: #ccc !important;
+}
+
+.disabled:hover {
+	background-color: #999 !important;
+}
+
 /***************************************************************
 |                         mobile phones                        |
 ***************************************************************/
+.clickable {
+	cursor: pointer;
+}
+
 #container {
-	width: 100%;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	min-height: 100%;
 }
 
 #menu {
@@ -94,7 +211,7 @@ a:hover {
 	top: 100%;
 	width: 100%;
 	height: 100%;
-	z-index: 999;
+	z-index: 900;
 	transition: top 0.4s cubic-bezier(0.32, 0.66, 0.38, 1);
 	color: #ddd;
 	background-color: #222;
@@ -219,11 +336,30 @@ a:hover {
 	left: 50%;
 }
 
+#loadingScreen {
+	display: none;
+	justify-content: center;
+	align-items: center;
+	position: fixed;
+	width: 100%;
+	height: 100%;
+	top: 0rem;
+}
+
+#loadingScreen > div {
+	width: 20rem;
+	height: 10rem;
+	background-color: #ddd;
+	color: #222;
+	border-radius: 0.625rem;
+}
+
 #content {
 	position: relative;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
+	margin-top: 2.5625rem;
 	padding: 1rem;
 	color: #ddd;
 }
@@ -235,22 +371,347 @@ a:hover {
 	text-align: center;
 }
 
-#newLocFile {
+#newLocFile, #filterProducts {
 	width: 100%;
 	margin: 0rem 0.625rem;
+}
+
+#newProduct > div {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin: 0.625rem;
+	margin-bottom: 0rem;
+}
+
+#list {
+	width: 100%;
+	padding: 1rem;
+}
+
+.viewer {
+	display: flex;
+	flex-direction: row;
+	border: solid 0.0625rem #ddd;
+	border-radius: 0.625rem;
+}
+
+.viewer > div:last-child > img {
+	width: 10rem;
+	height: 10rem;
+	object-fit: contain;
+}
+
+.viewer > div:last-child {
+	width: 10rem;
+	height: 10rem;
+	padding: 0.625rem;
+}
+
+.miniViewer {
+	display: flex;
+	max-height: 10rem;
+	flex-direction: column;
+	padding: 0.625rem;
+	overflow-y: overlay;
+}
+
+.miniViewer::-webkit-scrollbar {
+	display: none;
+}
+
+.miniViewer > img {
+	width: 5rem;
+	height: 5rem;
+	margin: 0.3125rem 0rem;
+	background-color: #ddd;
+	object-fit: contain;
+}
+
+.bigViewer {
+	position: fixed;
+	display: none;
+	flex-direction: column;
+	justify-content: space-evenly;
+	align-items: center;
+	top: 0rem;
+	left: 0rem;
+	width: 100%;
+	height: 100%;
+	background: rgba(0, 0, 0, 0.7);
+	color: #ddd;
+	z-index: 999;
+}
+
+.bigViewer > img {
+	max-width: 100%;
+	max-height: 70%;
+	object-fit: contain;
+}
+
+.bigViewer > div {
+	display: flex;
+	justify-content: space-between;
+	width: 80%;
+	height: 15%;
+	overflow-x: overlay;
+}
+
+.bigViewer > div::-webkit-scrollbar {
+	display: none;
+}
+
+.bigViewer > div > img {
+	height: 100%;
+	padding: 0rem 0.625rem;
+	object-fit: contain;
+}
+
+#lens {
+	position: absolute;
+	background-color: rgba(221, 221, 221, 0.5);
+}
+
+#zoom {
+	display: none;
+	position: absolute;
+	left: 30%;
+	top: 5%;
+	background-repeat: no-repeat;
+	border-radius: 0.625rem;
+	box-shadow: -0.3125rem 0.3125rem 2rem #222;
+}
+
+
+/* List like disposition */
+.lst {
+	display: flex;
+	flex-direction: column !important;
+	align-items: center;
+}
+
+.lst .sticker {
+	width: 100%;
+	height: 5rem;
+	display: flex;
+	flex-direction: row;
+	border: solid 1px #ddd;
+	margin: 1rem 0rem;
+}
+
+.lst .sticker * {
+	padding: 0rem 0.3125rem;
+}
+
+/* Product prev image */
+.lst .sticker > div:nth-child(1) > img {
+	width: 5rem;
+	height: 5rem;
+	object-fit: contain;
+}
+
+/* Product title and description */
+.lst .sticker > div:nth-child(2) {
+	position: relative;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+}
+
+.lst .sticker > div:nth-child(2) > * {
+	padding: 0.3125rem 0rem;
+}
+
+.lst .sticker > div:nth-child(2) > :nth-child(1) {
+	font-size: 0.875rem;
+	font-weight: bold;
+}
+
+.lst .sticker > div:nth-child(2) > :nth-child(2) {
+	font-size: 0.6875rem;
+}
+
+.lst .sticker > div:nth-child(2) > :nth-child(3) {
+	display: none;
+	position: absolute;
+	height: -webkit-fill-available; /* Check comptability */
+	right: 0rem;
+	align-items: center;
+	justify-content: center;
+	background: rgba(0, 0, 0, 0.75);
+}
+
+.lst .sticker > div:nth-child(2) :nth-child(3) > input {
+	height: 1.3125rem;
+	width: 50%;
+	text-align: center;
+}
+
+/* Product price and buying buttons */
+.lst .sticker > div:nth-child(3) {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-evenly;
+}
+
+.lst .sticker > div:nth-child(3) > :nth-child(n+2) {
+	display: flex;
+	height: 2rem;
+	justify-content: center;
+	align-items: center;
+}
+
+.lst .sticker > div:nth-child(3) > :nth-child(1) {
+}
+
+.lst .sticker > div:nth-child(3) > :nth-child(2) {
+}
+
+.lst .sticker > div:nth-child(3) > :nth-child(3) {
+	display: none;
+}
+
+/* Sticker like disposition */
+.stk {
+	display: flex;
+	flex-direction: row !important;
+	flex-wrap: wrap;
+	justify-content: center;
+}
+
+.stk .sticker {
+	position: relative;
+	height: 18rem;
+	width: 7.625rem;
+	display: flex;
+	flex-direction: column;
+	border: solid 1px #ddd;
+	margin: 0.625rem 0.3125rem;
+	padding: 0rem 0.3125rem;
+}
+
+/* Product prev image */
+.stk .sticker > div:nth-child(1) > img {
+	width: 7rem;
+	height: 7rem;
+	object-fit: contain;
+}
+
+/* Product title and description */
+.stk .sticker > div:nth-child(2) {
+	position: relative;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+}
+
+.stk .sticker > div:nth-child(2) > * {
+	padding: 0.3125rem 0rem;
+}
+
+.stk .sticker > div:nth-child(2) > :nth-child(1) {
+	font-weight: bold;
+}
+
+.stk .sticker > div:nth-child(2) > :nth-child(2) {
+	font-size: 0.6875rem;
+}
+
+.stk .sticker > div:nth-child(2) > :nth-child(3) {
+	cursor: default;
+	position: absolute;
+	height: inherit;
+	bottom: 0rem;
+	display: none;
+	align-items: flex-end;
+	justify-content: center;
+	background: linear-gradient(rgba(0, 0, 0, 0.75) 90%, transparent 100%);
+	
+}
+
+.stk .sticker > div:nth-child(2) :nth-child(3) > input {
+	height: 1.3125rem;
+	width: 50%;
+	text-align: center;
+	margin-bottom: 1rem;
+}
+
+/* Product price and buying buttons */
+.stk .sticker > div:nth-child(3) {
+	height: 4.115rem;
+}
+
+.stk .sticker > div:nth-child(3) > :nth-child(n+2) {
+	position: absolute;
+	width: 100%;
+	bottom: 0rem;
+	left: 0rem;
+	display: flex;
+	height: 2rem;
+	justify-content: center;
+	align-items: center;
+}
+
+.stk .sticker > div:nth-child(3) > :nth-child(1) {
+	position: absolute;
+	top: 0rem;
+	right: 0rem;
+}
+
+.stk .sticker > div:nth-child(3) > :nth-child(2) {
+}
+
+.stk .sticker > div:nth-child(3) > :nth-child(3) {
+	display: none;
 }
 
 .element {
 	display: flex;
 	flex-direction: column !important;
 	width: 100%;
-	margin: 0rem 0.625rem;
+	margin: 0.625rem 0rem;
 }
 
-.element > div {
+.element:not(:first-child) {
+	border-top: 0.0625rem solid #ddd;
+}
+
+.row {
+	width: 100%;
 	display: flex;
-	flex-direction: row;
+	flex-direction: row !important;
+	flex-wrap: wrap;
 	justify-content: space-between;
+	align-items: center;
+	margin: 0.625rem 0rem;
+}
+
+.row > * {
+	margin: 0.3125rem;
+}
+
+.crow {
+	width: 100%;
+	display: flex;
+	flex-direction: row !important;
+	flex-wrap: wrap;
+	justify-content: space-around;
+	align-items: center;
+	margin: 0.625rem 0rem;
+}
+
+.crow > * {
+	margin: 0.3125rem;
+}
+
+.align-right {
+	justify-content: flex-end;
+}
+
+.align-left {
+	justify-content: flex-start;
 }
 
 #footer {
@@ -265,24 +726,25 @@ a:hover {
 	text-align: center;
 }
 
-#footer :first-child {
+#footer > :first-child {
 	margin-top: 0.625rem;
 }
 
-#footer :last-child {
+#footer > :last-child {
+	width: 100%;
 	display: flex;
-	flex-direction: column;
-	align-items: center;
+	flex-wrap: wrap;
+	justify-content: space-around;
 }
 
-#footer :nth-child(odd) span {
+#footer > :nth-child(odd) span {
 	font-weight: bold;
 }
 
-#footer :nth-child(even) {
+#footer > :nth-child(even) {
 	margin-bottom: 1.25rem;
 }
 
-#footer :last-child a {
-	margin-bottom: 0.3125rem;
+#footer > :last-child a {
+	margin: 0.3125rem;
 }

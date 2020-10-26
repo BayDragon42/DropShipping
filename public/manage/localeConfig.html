@@ -3,8 +3,7 @@
 <html lang="fr">
 	<head>
 		<%- include ("../common/head.html") %>
-		<title>
-		</title>
+		<title></title>
 	</head>
 	<body>
 		<div id="container">
@@ -14,13 +13,14 @@
 			</div>
 			<div id="content">
 				<div class="element">
-					<div>
+					<div class="row">
 						<div class="custom-select">
 							<select id="lang">
 							</select>
 						</div>
 						<input id="newLocFile" type="text">
-						<button id="addLocFile"></button>
+						<button name="add" id="addFile"></button>
+						<button name="delete" id="delFile"></button>
 					</div>
 				</div>
 				<div id="keyList" class="element">

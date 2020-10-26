@@ -3,59 +3,57 @@ const fs = require("fs");
 const path = require("path");
 
 class DBHandler {
-	constructor() {
-		this.con = mysql.createConnection({
+	constructor(logHandler) {
+		this.logHandler = logHandler;
+		this.db = "mydb";
+	 	this.con = mysql.createPool({
+	 		connectionLimit: 10,
 			host: "localhost",
 			user: "root",
 			password: "admin",
-			port: 3380
-		});
-		this.db = "mydb";
-		
-		this.con.connect(function(err) {
-			if (err) throw err;
-			console.log("Connected!");
-		});
-		
-		this.con.query(`USE ${this.db}`, function (err, result) {
-			if (err) {
-				if (err.errno == 1049) {
-					console.log(`${err.sqlMessage} : Failed to connect MySql database`);
-				} else {
-					console.log(`${err.sqlMessage} : Mysql Database connection error`);
-				}
-			}
+			port: 3380,
+			database: this.db
 		});
 	}
 	
-	select(columns, table, where, callback) {
-		if(where != undefined) {
-			console.log(`SELECT ${columns} FROM ${table} WHERE ${where}`);
-			this.con.query(`SELECT ${columns} FROM ${table} WHERE ${where}`, function (err, result) {
-				if (err) {
-					if (err.errno == 1049) {
-						console.log(`${err.sqlMessage} : Failed to connect MySql database`);
-					} else {
-						console.log(`${err.sqlMessage} : Mysql Database connection error`);
-					}
+	openConnexion() {
+	 	var con = mysql.createPool({
+	 		connectionLimit: 10,
+			host: "localhost",
+			user: "root",
+			password: "admin",
+			port: 3380,
+			database: this.db
+		});
+		
+		return con;
+	}
+	
+	closeConnexion(con) {
+		con.end(function(err) {
+			if(err) {
+				this.logHandler.debug(`${err.message} : Error`);
+			}
+		})
+	}
+	
+	query(query, callback) {
+		this.logHandler.debug(query);
+		//var con = this.openConnexion();
+		
+		this.con.query(query, function(err, result) {
+			if(err) {
+				if(err.errno == 1049) {
+					this.logHandler.debug(`${err.sqlMessage} : Failed to connect MySql database`);
 				} else {
-					callback(result);
+					this.logHandler.debug(`${err.sqlMessage} : Mysql Database connection error`);
 				}
-			});
-		} else {
-			console.log(`SELECT ${columns} FROM ${table}`);
-			this.con.query(`SELECT ${columns} FROM ${table} WHERE ${where}`, function (err, result) {
-				if (err) {
-					if (err.errno == 1049) {
-						console.log(`${err.sqlMessage} : Failed to connect MySql database`);
-					} else {
-						console.log(`${err.sqlMessage} : Mysql Database connection error`);
-					}
-				} else {
-					callback(result);
-				}
-			});
-		}
+			} else {
+				callback(result);
+			}
+		});
+		
+		//this.closeConnexion(con);
 	}
 }
 

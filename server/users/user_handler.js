@@ -1,11 +1,13 @@
 const cron = require("node-cron");
 
 class UsersHandler {
-	constructor() {
+	constructor(logHandler) {
+		this.logHandler = logHandler;
+		
 		this.users = {};
 		cron.schedule("*/1 * * * *", () => {
 			for(var k in this.users) {
-				if(Date.now() > this.users[k].expire) {
+				if(this.users[k].isExpired()) {
 					this.removeUser(this.users[k].token);
 				}
 			}
@@ -13,7 +15,7 @@ class UsersHandler {
 	}
 	
 	addUser(token, user_id, session, expire) {
-		this.users[token] = new User(token, user_id, session, expire);
+		this.users[token] = new User(token, user_id, session, expire, this.logHandler);
 	}
 	
 	removeUser(token) {
@@ -30,15 +32,18 @@ class UsersHandler {
 }
 
 class User {
-	constructor(token, user_id, session, expire) {
+	constructor(token, user_id, session, expire, logHandler) {
 		this.token = token;
 		this.user_id = user_id;
 		this.session = session;
 		this.expire = expire;
+		
+		this.logHandler = logHandler;
 	}
   
 	isExpired() {
 		if(Date.now() > this.expire) {
+			this.logHandler.log(`${this.user_id} : validity expired`);
 			return true;
 		}
 
@@ -47,6 +52,7 @@ class User {
 	
 	setExpire(date) {
 		this.expire = date;
+		this.logHandler.log(`${this.user_id} : expire set to ${date}`);
 	}
 }
 
