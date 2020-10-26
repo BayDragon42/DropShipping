@@ -1,7 +1,5 @@
-const logsHandler = require("../logs/logs_handler.js");
 const messages = require("./requests_messages.js");
 const users = require("../users/user_handler.js");
-var usersHandler = new users();
 
 const moment = require("moment");
 const jwt = require("jwt-simple");
@@ -12,11 +10,14 @@ const adminPassword = "youkoulélé";
 const key = "oMim5OMvkTr-dUMpSfhOvZY-mHcf1UMdVSqJFoM0a4k6HxxiCzT2JRo_kmHRBgT5bk08kvR5ANAhDIvVFkGDq0B82hvGCHHeGaz2XrsJw5o6CUsYdOZeTyjje65zF1HPd6LvSq1rJUX-fW9QrdGOLuojP7arMxKOCRk0qXaiJsk";
 
 class Requests {
-	constructor(dbHandler) {
+	constructor(dbHandler, logHandler) {
 		this.dbHandler = dbHandler;
+		this.logHandler = logHandler;
+		this.usersHandler = new users(logHandler);
 	}
 
 	authentificatePartnerUser(user_id, pass, callback) {
+		var t = this;
 		this.dbHandler.query(`SELECT g.id, a.password FROM admin a LEFT JOIN groups g ON a.group_id = g.id WHERE a.user_id = "${user_id}"`, function(result) {
 			if(result.length != 0) {
 				if(pass === result[0].password) {
@@ -28,9 +29,9 @@ class Requests {
 						expires: expires
 					}, key);
 					
-					usersHandler.addUser(token, user_id, result[0].id, expires);
+					t.usersHandler.addUser(token, user_id, result[0].id, expires);
 					
-					logsHandler.log("User '" + user_id + "' logged in.");
+					t.logHandler.log("User '" + user_id + "' logged in.");
 					callback({
 						msg: messages.PARTNER_LOGIN_SUCCESS,
 						payload: {
@@ -38,7 +39,7 @@ class Requests {
 						}
 					});
 				} else {
-					logsHandler.log("User '" + user_id + "' tried to log in.");
+					t.logHandler.log("User '" + user_id + "' tried to log in.");
 					callback({
 						msg: messages.PARTNER_LOGIN_PASSWORD_ERROR,
 						payload: {}
@@ -54,6 +55,7 @@ class Requests {
 	}
 
 	authentificateUser(user_id, pass, callback) {
+		var t = this;
 		this.dbHandler.query(`SELECT * FROM users u LEFT JOIN sessions s ON u.session = s.id WHERE u.user_id = "${user_id}"`, function(result) {
 			if(result.length != 0) {
 				if(pass === result[0].password) {
@@ -64,9 +66,9 @@ class Requests {
 						exp: expires
 					}, key);
 					
-					usersHandler.addUser(token, user_id, session, expires);
+					t.usersHandler.addUser(token, user_id, session, expires);
 					
-					logsHandler.log("User '" + user_id + "' logged in.");
+					t.logHandler.log("User '" + user_id + "' logged in.");
 					callback({
 						msg: messages.LOGIN_SUCCESS,
 						payload: {
@@ -74,7 +76,7 @@ class Requests {
 						}
 					});
 				} else {
-					logsHandler.log("User '" + user_id + "' tried to log in.");
+					t.logHandler.log("User '" + user_id + "' tried to log in.");
 					callback({
 						msg: messages.LOGIN_PASSWORD_ERROR,
 						payload: {}
@@ -91,19 +93,19 @@ class Requests {
 
 	verifyCredentials(token, callback) {
 		if(token) {
-			var user = usersHandler.findUser(token);
+			var user = this.usersHandler.findUser(token);
 			if(user != undefined) {
 				if(!user.isExpired() && user.token == token) {
 					callback(messages.VERIFY_CREDENTIALS_SUCCESS);
 				} else {
-					logsHandler.log("Token '" + token + "' has expired");
+					this.logHandler.log("Token '" + token + "' has expired");
 					callback({
 						msg: messages.VERIFY_CREDENTIALS_ERROR,
 						err: "Token has expired"
 					});
 				}
 			} else {
-				logsHandler.log("Token '" + token + "' not registered");
+				this.logHandler.log("Token '" + token + "' not registered");
 				callback({
 					msg: messages.VERIFY_CREDENTIALS_ERROR,
 					err: "User not found"
@@ -118,8 +120,9 @@ class Requests {
 	}
 	
 	keepAlive(token, callback) {
-		var user = usersHandler.findUser(token);
+		var user = this.usersHandler.findUser(token);
 		if(user != undefined) {
+			this.logHandler.log(`${user.user_id} : keep alive`);
 			var expires = moment().add(10, "minutes").valueOf();
 			
 			user.setExpire(expires);

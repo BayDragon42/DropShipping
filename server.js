@@ -1,16 +1,30 @@
-const port = 8080;
-const hostname = "localhost";
+
+// Server configuration
+const minimist = require("minimist");
+let args = minimist(process.argv.slice(2), {
+	alias: {
+		p: "port",
+		h: "host",
+		m: "mode"
+	},
+	default: {
+		host: "localhost",
+		port: 8080,
+		mode: 0
+	}
+});
 
 // Local modules require's
 const messages = require("./server/requests/requests_messages.js");
 
 
 // Handlers
-const logsHandler = require("./server/logs/logs_handler.js");
+const lg = require("./server/logs/logs_handler.js");
+var logHandler = new lg(args.mode);
 const db = require("./server/databases/database_handler.js");
-var dbHandler = new db();
+var dbHandler = new db(logHandler);
 const request = require("./server/requests/requests_handler.js");
-var requestHandler = new request(dbHandler);
+var requestHandler = new request(dbHandler, logHandler);
 
 // NPM require's
 const express = require("express");
@@ -134,6 +148,6 @@ server.use(express.static(path.join(__dirname, 'public')), (req, res) => {
 	res.redirect("/");
 });
 
-server.listen(port, hostname, () => {
-	logsHandler.log(`Server running at http://${hostname}:${port}/`);
+server.listen(args.port, args.host, () => {
+	logHandler.log(`Server running at http://${args.host}:${args.port}/`);
 });

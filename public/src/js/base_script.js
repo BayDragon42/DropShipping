@@ -933,6 +933,8 @@ function showProducts(locale, products) {
 					var categories = response.payload.categories;
 	
 					var cat = document.getElementById("cat");
+					$(cat).empty();
+					cat.innerHTML = '<option value="null">Aucun</option';
 					$.each(categories, function(k, v) {
 						var option = document.createElement("option");
 						if(v.parent == null) {
@@ -1497,10 +1499,9 @@ $(document).ready(function() {
 		localStorage.setItem("locale", "fr");
 	}
 	
+	common.keepAlive();
 	setInterval(function() {
-		common.sendRequest(messages.SESSION_KEEP_ALIVE_REQUEST, {
-			token: localStorage.getItem("x-access-token")
-		});
+		common.keepAlive();
 	}, 1000*60*10 - 1000*30);
 	
 	common.getLocale(localStorage.getItem("locale"))

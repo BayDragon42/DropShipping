@@ -1,5 +1,11 @@
 import messages from "./messages.js"
 
+function keepAlive() {
+	sendRequest(messages.SESSION_KEEP_ALIVE_REQUEST, {
+		token: localStorage.getItem("x-access-token")
+	});
+}
+
 function sendRequest(msg, payload) {
 	console.log(msg);
 	return $.ajax({
@@ -127,11 +133,21 @@ function initCustomSelects() {
 			x[i].appendChild(b);
 	
 			a.addEventListener("click", function(e) {
+				e.stopPropagation();
 				if($(this).next("div.select-items:visible").length != 0) {
-					$(this).next("div.select-items").slideUp(100);
+					$(this).next("div.select-items").slideUp(100, function() {
+						$(window).off("click");
+					});
 				} else {
-					$("div.select-selected div.select-items").slideUp(100);
-					$(this).next("div.select-items").slideDown(100);
+					var t = this;
+					$("div.select-items").slideUp(100);
+					$(this).next("div.select-items").slideDown(100, function() {
+						window.addEventListener("click", function() {
+							$(t).next("div.select-items").slideUp(100, function() {
+								$(window).off("click");
+							});
+						});
+					});
 				}
 			});
 		}
@@ -379,6 +395,9 @@ function addTween(tl, parent, obj, currentProp, time, isChild) {
 }
 
 export default {
+	keepAlive: function() {
+		keepAlive();
+	},
 	getLocale: function(loc, home) {
 		return new Promise((resolve, reject) => {
 			resolve(sendRequest(messages.GET_LOCALE_CONTENT_REQUEST, {
