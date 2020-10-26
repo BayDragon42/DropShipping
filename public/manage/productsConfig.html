@@ -3,9 +3,7 @@
 <html lang="fr">
 	<head>
 		<%- include ("../common/head.html") %>
-		<script type="module" src="src/js/manage_script.js"></script>
-		<title>
-		</title>
+		<title></title>
 	</head>
 	<body>
 		<div id="container">
@@ -14,6 +12,46 @@
 				<%- include ("../common/header.html") %>
 			</div>
 			<div id="content">
+				<div class="element">
+					<div class="row">
+						<input id="filterProducts" type="text"/>
+						<button id="addProduct" name="add">
+							Ajouter
+						</button>
+					</div>
+				</div>
+				<div id="newProduct" style="display:none;" class="element">
+					<div>
+						<span>Titre</span>
+						<input id="title" type="text"/>
+					</div>
+					<div>
+						<span>Short Description</span>
+						<textarea id="sdesc"></textarea>
+					</div>
+					<div>
+						<span>Description</span>
+						<textarea id="desc"></textarea>
+					</div>
+					<div>
+						<span>Categorie</span>
+						<div class="custom-select cat">
+							<select id="cat">
+								<option value="null">Aucun</option>
+							</select>
+						</div>
+					</div>
+					<div>
+						<span>Prix</span>
+						<input id="price" type="number" min="0"/>
+					</div>
+					<div>
+						<input type="file" class="img-select" accept="image/*" multiple/>
+						<div class="custom-img-select">
+						</div>
+					</div>
+				</div>
+				<div id="productList" class="element"></div>
 			</div>
 			<div id="footer">
 				<%- include ("../common/footer.html") %>
