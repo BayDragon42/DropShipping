@@ -127,7 +127,15 @@ server.get("/manage", (req, res) => {
 			}
 		});
 	} else {
-		res.render("manage");
+		if(req.cookies["r"]) {
+			res.render("manage");
+		} else {
+			res.cookie("r", true, {
+				maxAge: 10000,
+				httpOnly: true
+			});
+			res.redirect("/manage");
+		}
 	}
 	
 });

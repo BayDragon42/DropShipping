@@ -19,7 +19,7 @@ function sendRequest(msg, payload) {
 	})
 	.then(response => {
 		return JSON.parse(response);
-	})
+	});
 }
 
 function getPage(url) {
@@ -180,7 +180,6 @@ function fillLocaleValues(locale) {
 
 	$("#newLocFile").attr("placeholder", locale["MNewLocFile_core"]);
 	$('[name="add"]').html(locale["MAdd_core"]);
-	$('[name="delete"]').html(locale["MDeleteVal_core"]);
 	$('[name="update"]').html(locale["MUpdateKeyVal_core"]);
 }
 

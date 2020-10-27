@@ -249,6 +249,7 @@ class Requests {
 			var data = [];
 			
 			var id = 0;
+			console.log(result);
 			result.forEach(item => {
 				if(id != item.id) {
 					var img = [];
@@ -395,15 +396,15 @@ class Requests {
 								var counter = 0;
 								img.forEach(item => {
 									t.dbHandler.query(`INSERT IGNORE INTO images (product_id, img, default_img) VALUES (${newProductId}, "${item[0]}", ${item[1]})`, function(result) {
-									});
-									counter++;
+										counter++;
 						
-									if(counter == img.length) {
-										callback({
-											msg: messages.ADD_NEW_PRODUCT_REQUEST,
-											payload: {}
-										});
-									}
+										if(counter == img.length) {
+											callback({
+												msg: messages.ADD_NEW_PRODUCT_REQUEST,
+												payload: {}
+											});
+										}
+									});
 								});
 							});
 						});

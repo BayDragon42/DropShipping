@@ -584,6 +584,28 @@ function getScript(locale) {
 /**********************************************************************
 |                        Product config Scripts                       |
 **********************************************************************/
+function getProducts(locale) {
+	$("#loadingScreen").css("display", "flex").hide().fadeIn(50);
+	$("#productList").slideUp(100);
+	$(document).css({"background-color": "rgba(0, 0, 0, 0.5)"});
+	common.sendRequest(messages.GET_PRODUCT_DATA_REQUEST, {
+		filter: "",
+		loc: "en"
+	})
+	.then(response => {
+		if(response.msg === messages.GET_PRODUCT_DATA_SUCCESS) {
+			showProducts(locale, response.payload.products);
+		}
+
+		return response;
+	})
+	.then(response => {
+		$("#loadingScreen").fadeOut(50);
+		$("#productList").css("display", "flex").hide().slideDown(100);
+		$(document).css({"background-color": "rgba(0, 0, 0, 0)"});
+	});
+}
+
 function sortImages(old_img, new_img) {
 	var del = old_img.filter(x => !new_img.includes(x));
 	var add = new_img.filter(x => !old_img.includes(x));
@@ -779,6 +801,7 @@ function showProductData(t, locale, product, loc, callback) {
 			var imgSelectContainer_node = document.createElement("div");
 			imgSelectContainer_node.classList.add("custom-img-select");
 			imgSelectContainer_node.addEventListener("click", function(e) {
+				initImageSelect();
 				triggerImgSelect(e);
 			});
 			
@@ -889,7 +912,9 @@ function showProducts(locale, products) {
 		var dButton = document.createElement("button");
 		dButton.name = "delete";
 		dButton.value = v.id;
+		dButton.innerHTML = locale["MDeleteVal_core"];
 		dButton.addEventListener("click", function(e) {
+			e.stopPropagation();
 			common.sendRequest(messages.DELETE_PRODUCT_REQUEST, {
 				id: v.id,
 				titleId: v.title_id,
@@ -897,10 +922,8 @@ function showProducts(locale, products) {
 				descriptionId: v.description_id
 			})
 			.then(response => {
-				console.log("ok");
-				// TODO Refresh the product list with this item filtered
+				getProducts(locale);
 			});
-			e.stopPropagation();
 		});
 		
 		productHeader_node.appendChild(dButton);
@@ -953,9 +976,9 @@ function showProducts(locale, products) {
 				if($("#cat option").length != 0) {
 					common.initCustomSelects();
 				}
-			});
 
-			$("#newProduct").slideDown("normal");
+				$("#newProduct").slideDown("normal");
+			});
 		} else {
 			if($("#title").val() !== "") {
 				var img = [];
@@ -977,13 +1000,12 @@ function showProducts(locale, products) {
 					category: $("#cat").val()
 				})
 				.then(response => {
-					// TODO Refresh the product list with this item filtered
-					return response
-				})
-				.then(response => {
 					$("#newProduct").slideUp("normal", function() {
 						resetAddNewProduct();
 					});
+				})
+				.then(response => {
+					getProducts(locale);
 				});
 			} else {
 				$("#newProduct").slideUp("normal", function() {
@@ -995,6 +1017,7 @@ function showProducts(locale, products) {
 }
 
 function initImageSelect() {
+	$(".img-select").off("change");
 	$(".img-select").change(function() {
 		var t = this;
 		Array.from(this.files).forEach(file => {
@@ -1010,7 +1033,7 @@ function initImageSelect() {
 				default_img.src = "./src/img/default.jpg";
 				
 				// TODO: Check the issue, doesn't seems to work everytime
-				if($(t).next("div").children().length == 1) {
+				if($(t).next("div").children().length == 0) {
 					default_img.name = "default";
 				} else {
 					$(default_img).css("filter", "grayscale()");
