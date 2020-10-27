@@ -249,7 +249,6 @@ class Requests {
 			var data = [];
 			
 			var id = 0;
-			console.log(result);
 			result.forEach(item => {
 				if(id != item.id) {
 					var img = [];
@@ -532,7 +531,6 @@ class Requests {
 	parseRequest(msg, payload, callback) {
 		switch(msg) {
 			case messages.PARTNER_LOGIN_REQUEST:
-				console.log("ok");
 				this.authentificatePartnerUser(payload.user_id, payload.pass, function(result) {
 					callback(result);
 				});

@@ -1552,6 +1552,12 @@ function updateCartVisual(c) {
 	}
 }
 
+function pageConfig(title, menu) {
+	$(document).attr("title", title);
+	
+	$("#menu");
+}
+
 /**********************************************************************
 |                            DOCUMENT READY                           |
 **********************************************************************/

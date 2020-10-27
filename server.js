@@ -131,7 +131,7 @@ server.get("/manage", (req, res) => {
 			res.render("manage");
 		} else {
 			res.cookie("r", true, {
-				maxAge: 10000,
+				maxAge: 1000,
 				httpOnly: true
 			});
 			res.redirect("/manage");
