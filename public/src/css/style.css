@@ -258,7 +258,7 @@ textarea {
 	left: 0;
 }
 
-#header > div:first-child div {
+#header > div:first-child > div {
 	margin: 0.625rem;
 }
 
@@ -334,6 +334,33 @@ textarea {
 	top: 0.5625rem;
 	width: 0%;
 	left: 50%;
+}
+
+#cart {
+	position: relative;
+	background-image: url("../img/caddie.png");
+	width: 1.3125rem;
+	height: 1.3125rem;
+	background-size: contain;
+}
+
+#cart > div {
+	display: none;
+	justify-content: center;
+	position: absolute;
+	bottom: -0.3125rem;
+	right: -0.3125rem;
+	min-width: 50%;
+	font-size: 0.625rem;
+	border: solid 0.125rem blue;
+	background: blue;
+	border-radius: 1rem;
+}
+
+#cart > div:after {
+	content: "";
+	display: block;
+	margin-bottom: -5%;
 }
 
 #loadingScreen {

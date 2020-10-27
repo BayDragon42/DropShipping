@@ -4,6 +4,13 @@ import messages from "./messages.js"
 function getScript(locale) {
 	$(document).off();
 	
+	window.addEventListener("touchmove", function(e) {
+		if(e.touches.length > 1) {
+			e.preventDefault();
+			//alert("pinch");
+		}
+	});
+	
 	var path = window.location.pathname + window.location.search;
 	switch(true) {
 		// CASE OF PRODUCT
@@ -348,8 +355,8 @@ function getScript(locale) {
 						});
 						var amount = document.createElement("input");
 						amount.type = "number";
-						amount.min = 0;
-						amount.value = 0;
+						amount.min = 1;
+						amount.value = 1;
 						
 						buyOpt.appendChild(amount);
 						
@@ -371,6 +378,7 @@ function getScript(locale) {
 						buy.innerHTML = "J'achète";
 						buy.addEventListener("click", function() {
 							// Adds product to cart
+							updateCart(v.id, parseInt(amount.value));
 						});
 						
 						buy.addEventListener("mouseleave", function() {
@@ -1512,6 +1520,39 @@ function setZoomContainerPos(e, t) {
 }
 
 /**********************************************************************
+|                          General functions                          |
+**********************************************************************/
+function updateCart(id, amount) {
+	var cart = JSON.parse(localStorage.getItem("cart"));
+	
+	if(cart) {
+		if(cart[id]) {
+			cart[id] += amount;
+		} else {
+			cart[id] = amount;
+		}
+	} else {
+		cart = {};
+		cart[id] = amount;
+		$("#cart").children("div").css("display", "flex").hide().fadeIn(100);
+	}
+	
+	localStorage.setItem("cart", JSON.stringify(cart));
+	
+	updateCartVisual();
+}
+
+function updateCartVisual(c) {
+	var cart = JSON.parse(localStorage.getItem("cart"));
+	
+	$("#cart").children("div").html(Object.keys(cart).length);
+	
+	if(Object.keys(cart).length != 0 && c) {
+		$("#cart").children("div").css("display", "flex").hide().fadeIn(100);
+	}
+}
+
+/**********************************************************************
 |                            DOCUMENT READY                           |
 **********************************************************************/
 $(document).ready(function() {
@@ -1547,6 +1588,8 @@ $(document).ready(function() {
 			common.initMenuLinks(function() {
 				getScript(locale);
 			});
+			
+			updateCartVisual(true);
 		
 			return locale
 		}
