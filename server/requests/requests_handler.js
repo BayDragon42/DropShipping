@@ -285,7 +285,12 @@ class Requests {
 		});
 	}
 	
-	getProductShortData(filter, loc, id, callback) {			
+	getProductShortData(filter, loc, id, callback) {
+		var byId = "";
+		if(id !== undefined) {
+			byId = `AND p.id = ${id}`;
+		}
+					
 		this.dbHandler.query(`SELECT DISTINCT p.id, l1.name AS title, l2.name AS short_description, l3.name AS category, i.img, p.price FROM products p
 			LEFT JOIN loc_keys lk1 ON p.title = lk1.loc_id
 			LEFT JOIN loc_keys lk2 ON p.short_description = lk2.loc_id
@@ -294,7 +299,7 @@ class Requests {
 			LEFT JOIN categories c ON p.category = c.id
 			LEFT JOIN locale l3 ON c.loc_id = l3.loc_id
 			LEFT JOIN images i ON p.id = i.product_id
-		WHERE l1.loc = "${loc}" AND l1.name LIKE "%${filter}%" AND i.default_img = 1`, function(result) {
+		WHERE l1.loc = "${loc}" AND l1.name LIKE "%${filter}%" ${byId} AND i.default_img = 1`, function(result) {
 			var data = [];
 			
 			var id = 0;

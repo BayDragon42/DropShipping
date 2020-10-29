@@ -236,7 +236,7 @@ textarea {
 }
 
 #header {
-	position: fixed;
+	position: sticky;
 	top: 0;
 	width: 100%;
 	height: 2.5625rem;
@@ -336,6 +336,12 @@ textarea {
 	left: 50%;
 }
 
+.textOverflow {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
 #cart {
 	position: relative;
 	background-image: url("../img/caddie.png");
@@ -344,7 +350,7 @@ textarea {
 	background-size: contain;
 }
 
-#cart > div {
+#cart > div:first-child {
 	display: none;
 	justify-content: center;
 	position: absolute;
@@ -357,10 +363,81 @@ textarea {
 	border-radius: 1rem;
 }
 
-#cart > div:after {
+#cart > div:first-child:after {
 	content: "";
 	display: block;
 	margin-bottom: -5%;
+}
+
+#cart > div:last-child {
+	position: absolute;
+	top: 2rem;
+	right: 0rem;
+	width: 250px;
+	background: #ddd;
+	color: #333;
+	padding: 0.3125rem;
+}
+
+#cart > div:last-child > div:first-child {
+	max-height: 10rem;
+	overflow-y: scroll;
+}
+
+#cart > div:last-child > div:first-child > div {
+	position: relative;
+	margin-bottom: 0.625rem;
+}
+
+#cart > div:last-child > div:first-child > div > a {
+	color: inherit;
+}
+
+#cart > div:last-child > div:first-child > div > a > img {
+	width: 5rem;
+	height: 5rem;
+	float: left;
+	object-fit: contain;
+}
+
+#cart > div:last-child > div:first-child > div > a > p {
+	font-size: 1rem;
+	padding-left: 1rem;
+	margin: 0;
+}
+
+#cart > div:last-child > div:first-child > div > a > p:first-of-type {
+	margin-top: 0.75rem;
+	font-weight: bold;
+}
+
+#cart > div:last-child > div:first-child > div > a > p:nth-of-type(2) {
+	font-size: 0.75rem;
+}
+
+#cart > div:last-child > div:first-child > div > a > p:last-of-type {
+	text-align: right;
+}
+
+#cart > div:last-child > div:last-child {
+	margin-bottom: 0.0625rem;
+}
+
+.remove{
+	position: absolute;
+	background: rgba(255, 255, 255, 0);
+	color: #333;
+	border-radius: 100%;
+	top: 0rem;
+	right: 0rem;
+	width: 1.0625rem;
+	height: 1.0625rem;
+	padding: 0.125rem;
+	transition: background 0.5s;
+}
+
+.remove:hover{
+	background: rgba(0, 200, 255, 1);
 }
 
 #loadingScreen {
@@ -377,7 +454,7 @@ textarea {
 	width: 20rem;
 	height: 10rem;
 	background-color: #ddd;
-	color: #222;
+	color: #333;
 	border-radius: 0.625rem;
 }
 
@@ -745,7 +822,7 @@ textarea {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	padding: 0 3.125rem;
+	padding: 0 2.125rem;
 	border-top: solid 0.0625rem #333;
 }
 
@@ -774,4 +851,9 @@ textarea {
 
 #footer > :last-child a {
 	margin: 0.3125rem;
+}
+
+#InfosText {
+	display: flex;
+	justify-content: center;
 }

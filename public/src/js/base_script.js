@@ -4,18 +4,12 @@ import messages from "./messages.js"
 function getScript(locale) {
 	$(document).off();
 	
-	window.addEventListener("touchmove", function(e) {
-		if(e.touches.length > 1) {
-			e.preventDefault();
-			//alert("pinch");
-		}
-	});
-	
 	var path = window.location.pathname + window.location.search;
 	switch(true) {
 		// CASE OF PRODUCT
 		case /\/products\?p=.*/.test(path):
-			// TODO: Enhance the search value spliting
+			pageConfig(locale["MMenuProducts_core"]);
+			// TODO: Enhance the search value spliting (more security control)
 			console.log(window.location.search.split("=")[1]);
 			
 			common.sendRequest(messages.GET_PRODUCT_DATA_REQUEST, {
@@ -28,6 +22,7 @@ function getScript(locale) {
 					var product = response.payload.products[0];
 					var originalImg = {};
 					
+					pageConfig(decodeURIComponent(product.title));
 					var productInfo_node = document.createElement("div");
 					productInfo_node.classList.add("element");
 					
@@ -293,6 +288,7 @@ function getScript(locale) {
 		
 		// CASE OF PRODUCTS
 		case /\/products/.test(path):
+			pageConfig(locale["MMenuProducts_core"]);
 			var button = document.createElement("button");
 			button.addEventListener("click", function() {
 				if($("#list").hasClass("stk")) {
@@ -314,7 +310,6 @@ function getScript(locale) {
 			.then(response => {
 				if(response.msg === messages.GET_PRODUCTS_SHORT_DATA_SUCCESS) {
 					var products = response.payload.products;
-					console.log(products);
 					$(productList_node).empty();
 					$.each(products, function(k, v) {
 						var product_node = document.createElement("div");
@@ -449,6 +444,7 @@ function getScript(locale) {
 		
 		// CASE OF STATS
 		case /\/manage\?page=stats/.test(path):
+			pageConfig(`${locale["documentTitleManage_core"]} - ${locale["MMenuStats_core"]}`);
 			break;
 		
 		// CASE OF PRODUCTS CONFIG
@@ -477,6 +473,7 @@ function getScript(locale) {
 		
 		// CASE OF LOCALE CONFIG
 		case /\/manage\?page=localeConfig/.test(path):
+			pageConfig(`${locale["documentTitleManage_core"]} - ${locale["MMenuConfigLocFiles_core"]}`);
 			common.sendRequest(messages.GET_FILES_FROM_PATH_REQUEST, {})
 			.then(response => {
 				if(response.msg === messages.GET_FILES_FROM_PATH_SUCCESS) {
@@ -510,6 +507,7 @@ function getScript(locale) {
 		
 		// CASE OF CATEGORIES CONFIG
 		case /\/manage\?page=productsCategories/.test(path):
+			pageConfig(`${locale["documentTitleManage_core"]} - ${locale["MMenuProductsCat_core"]}`);
 			common.sendRequest(messages.GET_CATEGORIES_REQUEST, {
 				parent: null,
 				loc: localStorage.getItem("locale")
@@ -560,6 +558,7 @@ function getScript(locale) {
 		
 		// CASE OF MANAGE
 		case /\/manage/.test(path):
+			pageConfig(locale["documentTitleManage_core"]);
 			//Manage's login
 			$("#login").click(function() {
 				var userId = $("#userId").val();
@@ -1534,29 +1533,141 @@ function updateCart(id, amount) {
 	} else {
 		cart = {};
 		cart[id] = amount;
-		$("#cart").children("div").css("display", "flex").hide().fadeIn(100);
+		$("#cart").children("div:first-child").css("display", "flex").hide().fadeIn(100);
 	}
 	
 	localStorage.setItem("cart", JSON.stringify(cart));
 	
-	updateCartVisual();
+	updateCartVisual(false, id, amount);
 }
 
-function updateCartVisual(c) {
+function updateCartVisual(c, id, amount) {
 	var cart = JSON.parse(localStorage.getItem("cart"));
 	
-	$("#cart").children("div").html(Object.keys(cart).length);
+	$("#cart").children("div:first-child").html(Object.keys(cart).length);
 	
-	if(Object.keys(cart).length != 0 && c) {
-		$("#cart").children("div").css("display", "flex").hide().fadeIn(100);
+	if(c) {
+		if(Object.keys(cart).length != 0) {
+			$("#cart").children("div:first-child").css("display", "flex").hide().fadeIn(100);
+			
+			for (const [key, value] of Object.entries(cart)) {
+				common.sendRequest(messages.GET_PRODUCTS_SHORT_DATA_REQUEST, {
+					filter: "",
+					id: key,
+					loc: localStorage.getItem("locale")
+				})
+				.then(response => {
+					if(response.msg === messages.GET_PRODUCTS_SHORT_DATA_SUCCESS) {
+						addCartComponent(response.payload.products[0], value);
+					}
+				});
+			}
+		}
+	} else {
+		if($("#cart").children("div:last-child").find(`[data-id=${id}]`)) {
+			let n = parseInt($("#cart").children("div:last-child").find(`[data-id=${id}]`).find("[quantity]").html().match(/\d+/));
+			console.log(n);
+			$("#cart").children("div:last-child").find(`[data-id=${id}]`).find("[quantity]").html(`Quantité : ${n + amount}`)
+		} else {
+			common.sendRequest(messages.GET_PRODUCTS_SHORT_DATA_REQUEST, {
+				filter: "",
+				id: id,
+				loc: localStorage.getItem("locale")
+			})
+			.then(response => {
+				if(response.msg === messages.GET_PRODUCTS_SHORT_DATA_SUCCESS) {
+					addCartComponent(response.payload.products[0], amount);
+				}
+			});
+		}
 	}
+}
+
+function addCartComponent(product, amount) {
+	var productContainer = document.createElement("div");
+	productContainer.setAttribute("class", "textOverflow");
+	productContainer.setAttribute("data-id", product.id);
+	
+	var productLink = document.createElement("a");
+	productLink.href = "./products?p=" + product.id;
+	
+	var productImg = document.createElement("img");
+	productImg.src = product.img;
+	productLink.appendChild(productImg);
+	
+	var productInfo = document.createElement("p");
+	productInfo.setAttribute("class", "textOverflow");
+	productInfo.innerHTML = decodeURIComponent(product.title);
+	productLink.appendChild(productInfo);
+	
+	var productInfo = document.createElement("p");
+	productInfo.setAttribute("class", "textOverflow");
+	productInfo.setAttribute("quantity", "");
+	productInfo.innerHTML = "Quantité : " + amount;
+	productLink.appendChild(productInfo);
+	
+	var productInfo = document.createElement("p");
+	productInfo.setAttribute("class", "textOverflow");
+	productInfo.innerHTML = product.price;
+	productLink.appendChild(productInfo);
+	
+	var productRemove = document.createElement("template-remove");
+	productRemove.setAttribute("class", "remove");
+	
+	productLink.appendChild(productRemove);
+	
+	productContainer.appendChild(productLink);
+	
+	$("#cart").children("div:last-child").children("div:first-child").append(productContainer);
 }
 
 function pageConfig(title, menu) {
 	$(document).attr("title", title);
 	
-	$("#menu");
+	//$("#menu");
 }
+
+class TemplateRemove extends HTMLElement {
+	constructor() {
+		super();
+		
+		var shadow = this.attachShadow({mode: "open"});
+		
+		var span = document.createElement("span");
+		span.style.position = "absolute";
+		span.style.width = "0.625rem";
+		span.style.height = "0rem";
+		span.style.border = "1px solid #333";
+		span.style.borderRadius = "25%";
+		span.style.transform = "rotate(45deg)";
+		shadow.appendChild(span);
+		
+		var span = document.createElement("span");
+		span.style.position = "absolute";
+		span.style.width = "0.625rem";
+		span.style.height = "0rem";
+		span.style.border = "1px solid #333";
+		span.style.borderRadius = "25%";
+		span.style.transform = "rotate(-45deg)";
+		shadow.appendChild(span);
+	}
+	
+	connectedCallback() {
+		updateRemoveTemplate(this);
+	}
+}
+
+function updateRemoveTemplate(elem) {	
+	elem.shadowRoot.childNodes.forEach(item => {
+		$(item).css({
+			width: `${(Math.sin(45*Math.PI/180) * parseInt($(elem).css("width"))) * 0.0625}rem`,
+			left: `calc(50% - ${((Math.sin(45*Math.PI/180) * parseInt($(elem).css("width")) * 0.0625) / 2 + parseInt($(item).css("border-left-width")) * 0.0625)}rem)`,
+			top: `calc(50% - ${parseInt($(item).css("border-left-width")) * 0.0625}rem)`
+		})
+	});
+}
+
+customElements.define("template-remove", TemplateRemove);
 
 /**********************************************************************
 |                            DOCUMENT READY                           |

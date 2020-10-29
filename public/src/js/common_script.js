@@ -155,16 +155,6 @@ function initCustomSelects() {
 }
 
 function fillLocaleValues(locale) {
-	switch(document.location.pathname) {
-		case "/":
-			$(document).attr("title", locale["documentTitleIndex_core"]);
-			break;
-	
-		default:
-			$(document).attr("title", locale["documentTitleManage_core"]);
-			break;
-	}
-
 	$("#Stats").children("span").html(locale["MMenuStats_core"]);
 	$("#Visits").children("span").html(locale["MMenuVisits_core"]);
 	$("#Commands").children("span").html(locale["MMenuCommands_core"]);
