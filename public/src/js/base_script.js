@@ -1,856 +1,880 @@
 import common from './common_script.js'
 import messages from "./messages.js"
 
-function getScript(locale) {
+$("body").hide();
+
+function getScript(locale, callback) {
 	$(document).off();
-	
-	var path = window.location.pathname + window.location.search;
-	switch(true) {
-		// CASE OF PRODUCT
-		case /\/products\?p=.*/.test(path):
-			pageConfig(locale["MMenuProducts_core"]);
-			// TODO: Enhance the search value spliting (more security control)
-			console.log(window.location.search.split("=")[1]);
+	$("#content").empty();
+	updateCartVisual(true, null, null, function() {
+		var path = window.location.pathname + window.location.search;
+		switch(true) {
+			// CASE OF PRODUCT
+			case /\/products\?p=.*/.test(path):
+				pageConfig(locale["MMenuProducts_core"]);
+				// TODO: Enhance the search value spliting (more security control)
+				console.log(window.location.search.split("=")[1]);
 			
-			common.sendRequest(messages.GET_PRODUCT_DATA_REQUEST, {
-				filter: "",
-				loc: localStorage.getItem("locale"),
-				id: window.location.search.split("=")[1]
-			})
-			.then(response => {
-				if(response.msg === messages.GET_PRODUCT_DATA_SUCCESS) {
-					var product = response.payload.products[0];
-					var originalImg = {};
+				common.sendRequest(messages.GET_PRODUCT_DATA_REQUEST, {
+					filter: "",
+					loc: localStorage.getItem("locale"),
+					id: window.location.search.split("=")[1]
+				})
+				.then(response => {
+					if(response.msg === messages.GET_PRODUCT_DATA_SUCCESS) {
+						var product = response.payload.products[0];
+						var originalImg = {};
 					
-					pageConfig(decodeURIComponent(product.title));
-					var productInfo_node = document.createElement("div");
-					productInfo_node.classList.add("element");
-					
-					// Title
-					var row_node = document.createElement("div");
-					row_node.classList.add("crow");
-					row_node.innerHTML = decodeURIComponent(product.title);
-					
-					productInfo_node.appendChild(row_node);
-					
-					// Images and PInfo
-					var row_node = document.createElement("div");
-					row_node.classList.add("crow");
-					
-					var imgContainer_node = document.createElement("div");
-					imgContainer_node.classList.add("viewer");
-					
-					var miniImage_tl = new TimelineMax({
-						repeat: -1
-					});
-					var miniImage_node = document.createElement("div");
-					miniImage_node.classList.add("miniViewer");
-					product.img.forEach(item => {
-						var image = document.createElement("img");
-						image.src = item[0];
-						image.addEventListener("click", function() {
-							var t = this;
-							$(this).parent().next().children("img").fadeOut(100, function() {
-								$(this).attr("src", $(t).attr("src"));
-								$(this).fadeIn(100);
-							});
-						});
-						
-						miniImage_node.appendChild(image);
-					});
-					
-					// Image Previsualisation
-					var zoom = document.createElement("div");
-					zoom.id = "zoom";
-					
-					var lens = document.createElement("div");
-					lens.id = "lens";
-					
-					var scrollTime = $(miniImage_node).children.length * 10;
-					var imageSelect_node = document.createElement("div");
-					var image_node = document.createElement("div");
-					var image = document.createElement("img");
-					image.src = product.img.filter(x => x[1] == 1)[0][0];
-					image_node.appendChild(image);
-					image.addEventListener("click", function() {
-						var bigImg = $('.bigViewer').children('img');
-						
-						assignZoomImg(product.img.filter(x => x[1] == 1)[0][0], bigImg, zoom, function(result) {
-							originalImg = result;
-						});
-						
-						bigImg.attr("src", $(this).attr("src"));
-						miniImage_tl.pause();
-						$("body").find(".bigViewer").css("display", "flex").hide().fadeIn(100, function() {
-							var bigImage_tl = new TimelineMax({
-								repeat: -1
-							})
-							.to(imageSelect_node, scrollTime, {
-								scrollLeft: imageSelect_node.scrollWidth - imageSelect_node.offsetWidth,
-								ease: Power0.easeNone
-							})
-							.to(imageSelect_node, scrollTime, {
-								scrollLeft: 0,
-								ease: Power0.easeNone
-							});
-							
-							imageSelect_node.addEventListener("touchstart", function() {
-								bigImage_tl.pause();
-							});
-							
-							imageSelect_node.addEventListener("mouseenter", function() {
-								bigImage_tl.pause();
-							});
-							
-							imageSelect_node.addEventListener("touchend", function() {
-								bigImage_tl.resume(scrollTime * (imageSelect_node.scrollLeft / (imageSelect_node.scrollWidth - imageSelect_node.offsetWidth)));
-							});
-							
-							imageSelect_node.addEventListener("mouseleave", function() {
-								bigImage_tl.resume(scrollTime * (imageSelect_node.scrollLeft / (imageSelect_node.scrollWidth - imageSelect_node.offsetWidth)));
-							});
-						});
-					});
-					
-					$(".bigViewer").remove();
-					var bigImage_node = document.createElement("div");
-					bigImage_node.classList.add("bigViewer");
-					
-					var bigImage = document.createElement("img");
-					var zoomTm;
-					
-					lens.addEventListener("click", function(e) {
-						$(this).parent().fadeOut(100, function() {
-							miniImage_tl.resume();
-						});
-					});
-					
-					lens.addEventListener("mouseenter", function(e) {
-						setZoomContainerPos(e, $(this).next("img"));
-						
-						clearTimeout(zoomTm);
-						zoomTm = setTimeout(function() {
-							$("#zoom").fadeIn(75);
-						}, 1);
-					});
-					zoom.addEventListener("mouseenter", function(e) {
-						setZoomContainerPos(e, $(this).prev("img"));
-						
-						clearTimeout(zoomTm);
-						zoomTm = setTimeout(function() {
-							$("#zoom").fadeIn(75);
-						}, 1);
-					});
-					bigImage.addEventListener("mouseenter", function(e) {
-						setZoomContainerPos(e, this);
-						
-						clearTimeout(zoomTm);
-						zoomTm = setTimeout(function() {
-							$("#zoom").fadeIn(75);
-						}, 1);
-					});
-					
-					lens.addEventListener("mouseleave", function() {
-						clearTimeout(zoomTm);
-						zoomTm = setTimeout(function() {
-							$("#zoom").fadeOut(75);
-						}, 1);
-					});
-					zoom.addEventListener("mouseleave", function() {
-						clearTimeout(zoomTm);
-						zoomTm = setTimeout(function() {
-							$("#zoom").fadeOut(75);
-						}, 1);
-					});
-					bigImage.addEventListener("mouseleave", function() {
-						clearTimeout(zoomTm);
-						zoomTm = setTimeout(function() {
-							$("#zoom").fadeOut(75);
-						}, 1);
-					});
-					
-					lens.addEventListener("mousemove", function(e) {
-						e.prevent
-						setZoomContainerPos(e, $(this).next("img"));
-						
-						moveLens(e, originalImg, bigImage, lens, zoom);
-					})
-					zoom.addEventListener("mousemove", function(e) {
-						setZoomContainerPos(e, $(this).prev("img"));
-						
-						moveLens(e, originalImg, bigImage, lens, zoom);
-					})
-					bigImage.addEventListener("mousemove", function(e) {
-						setZoomContainerPos(e, this);
-						
-						moveLens(e, originalImg, bigImage, lens, zoom);
-					});
-					
-					lens.addEventListener("touchmove", function(e) {
-						setZoomContainerPos(e, $(this).next("img"));
-						
-						moveLens(e, originalImg, bigImage, lens, zoom);
-					});
-					zoom.addEventListener("mousemove", function(e) {
-						setZoomContainerPos(e, $(this).prev("img"));
-						
-						moveLens(e, originalImg, bigImage, lens, zoom);
-					})
-					bigImage.addEventListener("touchmove", function(e) {
-						setZoomContainerPos(e, this);
-												
-						moveLens(e, originalImg, bigImage, lens, zoom);
-					});
-			
-					window.addEventListener("resize", function() {
-						initZoomingSize(originalImg, bigImage, zoom, lens);
-					});
-					
-					product.img.forEach(item => {
-						var image = document.createElement("img");
-						image.src = item[0];
-						image.addEventListener("click", function(e) {
-							var t = this;
-							$(".bigViewer").children("img").fadeOut(100, function() {
-								$(this).attr("src", $(t).attr("src"));
-								assignZoomImg(product.img.filter(x => x[1] == 1)[0][0], $(bigImage), zoom, function(result) {
-									originalImg = result;
-								});
-								
-								$(this).fadeIn(100);
-							});
-							
-							e.stopPropagation();
-						});
-						
-						imageSelect_node.appendChild(image);
-					});
-					
-					bigImage_node.innerHTML = "<span>Click on the image to exit</span>";
-					bigImage_node.appendChild(lens);
-					bigImage_node.appendChild(bigImage);
-					bigImage_node.appendChild(imageSelect_node);
-					bigImage_node.appendChild(zoom);
-					
-					
-					imgContainer_node.appendChild(miniImage_node);
-					imgContainer_node.appendChild(image_node);
-					$("#container").append(bigImage_node);
-					
-					// Info container
-					var pInfo_node = document.createElement("div");
-					pInfo_node.innerHTML = "Heya !!!!!!!!!!!!!!!!!!!!";
-					
-					row_node.appendChild(imgContainer_node);
-					row_node.appendChild(pInfo_node);
-					
-					productInfo_node.appendChild(row_node);
-					
-					// Description
-					var row_node = document.createElement("div");
-					row_node.classList.add("crow");
-					row_node.innerHTML = decodeURIComponent(product.description);
-					
-					productInfo_node.appendChild(row_node);
-					
-					$("#content").append(productInfo_node);
-					
-					// init Tween animations
-					miniImage_tl.to(miniImage_node, scrollTime, {
-						scrollTop: miniImage_node.scrollHeight - miniImage_node.offsetHeight,
-						ease: Power0.easeNone
-					})
-					.to(miniImage_node, scrollTime, {
-						scrollTop: 0,
-						ease: Power0.easeNone
-					});
-					
-					miniImage_node.addEventListener("touchstart", function() {
-						miniImage_tl.pause();
-					});
-					
-					miniImage_node.addEventListener("mouseenter", function() {
-						miniImage_tl.pause();
-					});
-					
-					miniImage_node.addEventListener("touchend", function() {
-						miniImage_tl.resume(scrollTime * (miniImage_node.scrollTop / (miniImage_node.scrollHeight - miniImage_node.offsetHeight)));
-					});
-					
-					miniImage_node.addEventListener("mouseleave", function() {
-						miniImage_tl.resume(scrollTime * (miniImage_node.scrollTop / (miniImage_node.scrollHeight - miniImage_node.offsetHeight)));
-					});
-				} else if(response.msg === messages.GET_PRODUCT_DATA_ERROR) {
-					// No products found
-				}
-			});
-			break;
-		
-		// CASE OF PRODUCTS
-		case /\/products/.test(path):
-			pageConfig(locale["MMenuProducts_core"]);
-			var button = document.createElement("button");
-			button.addEventListener("click", function() {
-				if($("#list").hasClass("stk")) {
-					common.classTransform(".sticker", "stk", "lst", 0.3);
-				} else {
-					common.classTransform(".sticker", "lst", "stk", 0.3);
-				}
-			});
-			
-			var productList_node = document.createElement("div");
-			productList_node.id = "list";
-			// Check local storage for disposition
-			productList_node.setAttribute("class", "stk");
-			
-			common.sendRequest(messages.GET_PRODUCTS_SHORT_DATA_REQUEST, {
-				filter: "",
-				loc: localStorage.getItem("locale")
-			})
-			.then(response => {
-				if(response.msg === messages.GET_PRODUCTS_SHORT_DATA_SUCCESS) {
-					var products = response.payload.products;
-					$(productList_node).empty();
-					$.each(products, function(k, v) {
-						var product_node = document.createElement("div");
-						product_node.classList.add("sticker");
-						
-						var productImg_node = document.createElement("div");
-						productImg_node.classList.add("clickable");
-						// On click show product complete detail page
-						productImg_node.addEventListener("click", function() {
-							history.pushState(null, null, "/products?p=" + $(this).children("img").attr("name"));
-							common.changePage(function() {
-								getScript(locale);
-							});
-						});
-						var img = document.createElement("img");
-						img.name = v.id;
-						img.src = v.img;
-						
-						productImg_node.appendChild(img);
-						
+						pageConfig(decodeURIComponent(product.title));
 						var productInfo_node = document.createElement("div");
-						productInfo_node.classList.add("clickable");
-						// On click show product complete detail page
-						productInfo_node.addEventListener("click", function() {
-							history.pushState(null, null, "/products?p=" + $(this).prev().children("img").attr("name"));
-							common.changePage(function() {
-								getScript(locale);
+						productInfo_node.classList.add("element");
+					
+						// Title
+						var row_node = document.createElement("div");
+						row_node.classList.add("crow");
+						row_node.innerHTML = decodeURIComponent(product.title);
+					
+						productInfo_node.appendChild(row_node);
+					
+						// Images and PInfo
+						var row_node = document.createElement("div");
+						row_node.classList.add("crow");
+					
+						var imgContainer_node = document.createElement("div");
+						imgContainer_node.classList.add("viewer");
+					
+						var miniImage_tl = new TimelineMax({
+							repeat: -1
+						});
+						var miniImage_node = document.createElement("div");
+						miniImage_node.classList.add("miniViewer");
+						product.img.forEach(item => {
+							var image = document.createElement("img");
+							image.src = item[0];
+							image.addEventListener("click", function() {
+								var t = this;
+								$(this).parent().next().children("img").fadeOut(100, function() {
+									$(this).attr("src", $(t).attr("src"));
+									$(this).fadeIn(100);
+								});
+							});
+						
+							miniImage_node.appendChild(image);
+						});
+					
+						// Image Previsualisation
+						var zoom = document.createElement("div");
+						zoom.id = "zoom";
+					
+						var lens = document.createElement("div");
+						lens.id = "lens";
+					
+						var scrollTime = $(miniImage_node).children.length * 10;
+						var imageSelect_node = document.createElement("div");
+						var image_node = document.createElement("div");
+						var image = document.createElement("img");
+						image.src = product.img.filter(x => x[1] == 1)[0][0];
+						image_node.appendChild(image);
+						image.addEventListener("click", function() {
+							var bigImg = $('.bigViewer').children('img');
+						
+							assignZoomImg(product.img.filter(x => x[1] == 1)[0][0], bigImg, zoom, function(result) {
+								originalImg = result;
+							});
+						
+							bigImg.attr("src", $(this).attr("src"));
+							miniImage_tl.pause();
+							$("body").find(".bigViewer").css("display", "flex").hide().fadeIn(100, function() {
+								var bigImage_tl = new TimelineMax({
+									repeat: -1
+								})
+								.to(imageSelect_node, scrollTime, {
+									scrollLeft: imageSelect_node.scrollWidth - imageSelect_node.offsetWidth,
+									ease: Power0.easeNone
+								})
+								.to(imageSelect_node, scrollTime, {
+									scrollLeft: 0,
+									ease: Power0.easeNone
+								});
+							
+								imageSelect_node.addEventListener("touchstart", function() {
+									bigImage_tl.pause();
+								});
+							
+								imageSelect_node.addEventListener("mouseenter", function() {
+									bigImage_tl.pause();
+								});
+							
+								imageSelect_node.addEventListener("touchend", function() {
+									bigImage_tl.resume(scrollTime * (imageSelect_node.scrollLeft / (imageSelect_node.scrollWidth - imageSelect_node.offsetWidth)));
+								});
+							
+								imageSelect_node.addEventListener("mouseleave", function() {
+									bigImage_tl.resume(scrollTime * (imageSelect_node.scrollLeft / (imageSelect_node.scrollWidth - imageSelect_node.offsetWidth)));
+								});
 							});
 						});
-						
-						var title = document.createElement("span");
-						title.innerHTML = decodeURIComponent(v.title);
-						var description = document.createElement("span");
-						description.innerHTML = decodeURIComponent(v.short_description);
-						var buyOpt = document.createElement("div");
-						buyOpt.addEventListener("click", function(e) {
-							e.stopPropagation();
+					
+						$(".bigViewer").remove();
+						var bigImage_node = document.createElement("div");
+						bigImage_node.classList.add("bigViewer");
+					
+						var bigImage = document.createElement("img");
+						var zoomTm;
+					
+						lens.addEventListener("click", function(e) {
+							$(this).parent().fadeOut(100, function() {
+								miniImage_tl.resume();
+							});
 						});
-						var amount = document.createElement("input");
-						amount.type = "number";
-						amount.min = 1;
-						amount.value = 1;
+					
+						lens.addEventListener("mouseenter", function(e) {
+							setZoomContainerPos(e, $(this).next("img"));
 						
-						buyOpt.appendChild(amount);
-						
-						productInfo_node.appendChild(title);
-						productInfo_node.appendChild(description);
-						productInfo_node.appendChild(buyOpt);
-						
-						var productOpt_node = document.createElement("div");
-						var price = document.createElement("div");
-						price.innerHTML = v.price;
-						
-						var quickBuy = document.createElement("div");
-						quickBuy.classList.add("clickable");
-						var optTimeout;
-						quickBuy.innerHTML = "Achat Rapide";
-						
-						var buy = document.createElement("div");
-						buy.classList.add("clickable");
-						buy.innerHTML = "J'achète";
-						buy.addEventListener("click", function() {
-							// Adds product to cart
-							updateCart(v.id, parseInt(amount.value));
+							clearTimeout(zoomTm);
+							zoomTm = setTimeout(function() {
+								$("#zoom").fadeIn(75);
+							}, 1);
 						});
+						zoom.addEventListener("mouseenter", function(e) {
+							setZoomContainerPos(e, $(this).prev("img"));
 						
-						buy.addEventListener("mouseleave", function() {
-							if($(this).parent().prev("div").children("div:visible").length !== 0) {
+							clearTimeout(zoomTm);
+							zoomTm = setTimeout(function() {
+								$("#zoom").fadeIn(75);
+							}, 1);
+						});
+						bigImage.addEventListener("mouseenter", function(e) {
+							setZoomContainerPos(e, this);
+						
+							clearTimeout(zoomTm);
+							zoomTm = setTimeout(function() {
+								$("#zoom").fadeIn(75);
+							}, 1);
+						});
+					
+						lens.addEventListener("mouseleave", function() {
+							clearTimeout(zoomTm);
+							zoomTm = setTimeout(function() {
+								$("#zoom").fadeOut(75);
+							}, 1);
+						});
+						zoom.addEventListener("mouseleave", function() {
+							clearTimeout(zoomTm);
+							zoomTm = setTimeout(function() {
+								$("#zoom").fadeOut(75);
+							}, 1);
+						});
+						bigImage.addEventListener("mouseleave", function() {
+							clearTimeout(zoomTm);
+							zoomTm = setTimeout(function() {
+								$("#zoom").fadeOut(75);
+							}, 1);
+						});
+					
+						lens.addEventListener("mousemove", function(e) {
+							e.prevent
+							setZoomContainerPos(e, $(this).next("img"));
+						
+							moveLens(e, originalImg, bigImage, lens, zoom);
+						})
+						zoom.addEventListener("mousemove", function(e) {
+							setZoomContainerPos(e, $(this).prev("img"));
+						
+							moveLens(e, originalImg, bigImage, lens, zoom);
+						})
+						bigImage.addEventListener("mousemove", function(e) {
+							setZoomContainerPos(e, this);
+						
+							moveLens(e, originalImg, bigImage, lens, zoom);
+						});
+					
+						lens.addEventListener("touchmove", function(e) {
+							setZoomContainerPos(e, $(this).next("img"));
+						
+							moveLens(e, originalImg, bigImage, lens, zoom);
+						});
+						zoom.addEventListener("mousemove", function(e) {
+							setZoomContainerPos(e, $(this).prev("img"));
+						
+							moveLens(e, originalImg, bigImage, lens, zoom);
+						})
+						bigImage.addEventListener("touchmove", function(e) {
+							setZoomContainerPos(e, this);
+												
+							moveLens(e, originalImg, bigImage, lens, zoom);
+						});
+			
+						window.addEventListener("resize", function() {
+							initZoomingSize(originalImg, bigImage, zoom, lens);
+						});
+					
+						product.img.forEach(item => {
+							var image = document.createElement("img");
+							image.src = item[0];
+							image.addEventListener("click", function(e) {
+								var t = this;
+								$(".bigViewer").children("img").fadeOut(100, function() {
+									$(this).attr("src", $(t).attr("src"));
+									assignZoomImg(product.img.filter(x => x[1] == 1)[0][0], $(bigImage), zoom, function(result) {
+										originalImg = result;
+									});
+								
+									$(this).fadeIn(100);
+								});
+							
+								e.stopPropagation();
+							});
+						
+							imageSelect_node.appendChild(image);
+						});
+					
+						bigImage_node.innerHTML = "<span>Click on the image to exit</span>";
+						bigImage_node.appendChild(lens);
+						bigImage_node.appendChild(bigImage);
+						bigImage_node.appendChild(imageSelect_node);
+						bigImage_node.appendChild(zoom);
+					
+					
+						imgContainer_node.appendChild(miniImage_node);
+						imgContainer_node.appendChild(image_node);
+						$("#container").append(bigImage_node);
+					
+						// Info container
+						var pInfo_node = document.createElement("div");
+						pInfo_node.innerHTML = "Heya !!!!!!!!!!!!!!!!!!!!";
+					
+						row_node.appendChild(imgContainer_node);
+						row_node.appendChild(pInfo_node);
+					
+						productInfo_node.appendChild(row_node);
+					
+						// Description
+						var row_node = document.createElement("div");
+						row_node.classList.add("crow");
+						row_node.innerHTML = decodeURIComponent(product.description);
+					
+						productInfo_node.appendChild(row_node);
+					
+						$("#content").append(productInfo_node);
+					
+						// init Tween animations
+						miniImage_tl.to(miniImage_node, scrollTime, {
+							scrollTop: miniImage_node.scrollHeight - miniImage_node.offsetHeight,
+							ease: Power0.easeNone
+						})
+						.to(miniImage_node, scrollTime, {
+							scrollTop: 0,
+							ease: Power0.easeNone
+						});
+					
+						miniImage_node.addEventListener("touchstart", function() {
+							miniImage_tl.pause();
+						});
+					
+						miniImage_node.addEventListener("mouseenter", function() {
+							miniImage_tl.pause();
+						});
+					
+						miniImage_node.addEventListener("touchend", function() {
+							miniImage_tl.resume(scrollTime * (miniImage_node.scrollTop / (miniImage_node.scrollHeight - miniImage_node.offsetHeight)));
+						});
+					
+						miniImage_node.addEventListener("mouseleave", function() {
+							miniImage_tl.resume(scrollTime * (miniImage_node.scrollTop / (miniImage_node.scrollHeight - miniImage_node.offsetHeight)));
+						});
+					} else if(response.msg === messages.GET_PRODUCT_DATA_ERROR) {
+						// No products found
+					}
+				})
+				.then(response => {
+					callback();
+				});
+				break;
+		
+			// CASE OF PRODUCTS
+			case /\/products/.test(path):
+				pageConfig(locale["MMenuProducts_core"]);
+				var button = document.createElement("button");
+				button.addEventListener("click", function() {
+					if($("#list").hasClass("stk")) {
+						common.classTransform(".sticker", "stk", "lst", 0.3);
+					} else {
+						common.classTransform(".sticker", "lst", "stk", 0.3);
+					}
+				});
+			
+				var productList_node = document.createElement("div");
+				productList_node.id = "list";
+				// Check local storage for disposition
+				productList_node.setAttribute("class", "stk");
+			
+				common.sendRequest(messages.GET_PRODUCTS_SHORT_DATA_REQUEST, {
+					filter: "",
+					loc: localStorage.getItem("locale")
+				})
+				.then(response => {
+					if(response.msg === messages.GET_PRODUCTS_SHORT_DATA_SUCCESS) {
+						var products = response.payload.products;
+						$(productList_node).empty();
+						$.each(products, function(k, v) {
+							var product_node = document.createElement("div");
+							product_node.classList.add("sticker");
+						
+							var productImg_node = document.createElement("div");
+							productImg_node.classList.add("clickable");
+							// On click show product complete detail page
+							productImg_node.addEventListener("click", function() {
+								history.pushState(null, null, "/products?p=" + $(this).children("img").attr("name"));
+								common.changePage(function() {
+									getScript(locale);
+								});
+							});
+							var img = document.createElement("img");
+							img.name = v.id;
+							img.src = v.img;
+						
+							productImg_node.appendChild(img);
+						
+							var productInfo_node = document.createElement("div");
+							productInfo_node.classList.add("clickable");
+							// On click show product complete detail page
+							productInfo_node.addEventListener("click", function() {
+								history.pushState(null, null, "/products?p=" + $(this).prev().children("img").attr("name"));
+								common.changePage(function() {
+									getScript(locale);
+								});
+							});
+						
+							var title = document.createElement("span");
+							title.innerHTML = decodeURIComponent(v.title);
+							var description = document.createElement("span");
+							description.innerHTML = decodeURIComponent(v.short_description);
+							var buyOpt = document.createElement("div");
+							buyOpt.addEventListener("click", function(e) {
+								e.stopPropagation();
+							});
+							var amount = document.createElement("input");
+							amount.type = "number";
+							amount.min = 1;
+							amount.value = 1;
+						
+							buyOpt.appendChild(amount);
+						
+							productInfo_node.appendChild(title);
+							productInfo_node.appendChild(description);
+							productInfo_node.appendChild(buyOpt);
+						
+							var productOpt_node = document.createElement("div");
+							var price = document.createElement("div");
+							price.innerHTML = v.price;
+						
+							var quickBuy = document.createElement("div");
+							quickBuy.classList.add("clickable");
+							var optTimeout;
+							quickBuy.innerHTML = "Achat Rapide";
+						
+							var buy = document.createElement("div");
+							buy.classList.add("clickable");
+							buy.innerHTML = "J'achète";
+							buy.addEventListener("click", function() {
+								// Adds product to cart
+								updateCart(v.id, parseInt(amount.value));
+							});
+						
+							buy.addEventListener("mouseleave", function() {
+								if($(this).parent().prev("div").children("div:visible").length !== 0) {
+									var t = this
+									optTimeout = setTimeout(function() {
+										$(t).parent().prev("div").children("div").fadeOut(100);
+										$(t).prev().css("display", "flex").hide().fadeIn(100);
+										$(t).fadeOut(100);
+									}, 1);
+								}
+							});
+							buy.addEventListener("mouseenter", function() {
+								clearTimeout(optTimeout);
+							});
+							// Click only for mobile devices
+							quickBuy.addEventListener("touchstart", function(e) {
+								e.stopPropagation();
+								$(this).parent().prev("div").children("div").css("display", "flex").hide().fadeIn(100);
+								$(this).next().css("display", "flex").hide().fadeIn(100);
+								$(this).fadeOut(100);
+							});
+							quickBuy.addEventListener("mouseenter", function() {
+								$(this).parent().prev("div").children("div").css("display", "flex").hide().fadeIn(100);
+								$(this).next().css("display", "flex").hide().fadeIn(100);
+								$(this).fadeOut(100);
+							});
+							quickBuy.addEventListener("mousestart", function() {
 								var t = this
 								optTimeout = setTimeout(function() {
 									$(t).parent().prev("div").children("div").fadeOut(100);
-									$(t).prev().css("display", "flex").hide().fadeIn(100);
-									$(t).fadeOut(100);
+									$(t).css("display", "flex").hide().fadeIn(100);
+									$(t).next().fadeOut(100);
 								}, 1);
-							}
-						});
-						buy.addEventListener("mouseenter", function() {
-							clearTimeout(optTimeout);
-						});
-						// Click only for mobile devices
-						quickBuy.addEventListener("touchstart", function(e) {
-							e.stopPropagation();
-							$(this).parent().prev("div").children("div").css("display", "flex").hide().fadeIn(100);
-							$(this).next().css("display", "flex").hide().fadeIn(100);
-							$(this).fadeOut(100);
-						});
-						quickBuy.addEventListener("mouseenter", function() {
-							$(this).parent().prev("div").children("div").css("display", "flex").hide().fadeIn(100);
-							$(this).next().css("display", "flex").hide().fadeIn(100);
-							$(this).fadeOut(100);
-						});
-						quickBuy.addEventListener("mousestart", function() {
-							var t = this
-							optTimeout = setTimeout(function() {
-								$(t).parent().prev("div").children("div").fadeOut(100);
-								$(t).css("display", "flex").hide().fadeIn(100);
-								$(t).next().fadeOut(100);
-							}, 1);
-						});
-						buyOpt.addEventListener("mouseleave", function() {
-							if($(this).children(":visible").length !== 0) {
-								var t = this
-								optTimeout = setTimeout(function() {
-									$(t).fadeOut(100);
-									$(t).parent().next().children("div:nth-child(2)").css("display", "flex").hide().fadeIn(100);
-									$(t).parent().next().children("div:nth-child(3)").fadeOut(100);
-								}, 1);
-							}
-						});
-						buyOpt.addEventListener("mouseenter", function() {
-							clearTimeout(optTimeout);
-						});
-						
-						productOpt_node.appendChild(price);
-						productOpt_node.appendChild(quickBuy);
-						productOpt_node.appendChild(buy);
-						
-						product_node.appendChild(productImg_node);
-						product_node.appendChild(productInfo_node);
-						product_node.appendChild(productOpt_node);
-						
-						productList_node.appendChild(product_node);
-					});
-					
-					$("#content").append(button);
-					$("#content").append(productList_node);
-					
-					return response;
-				}
-			});
-			break;
-		
-		// CASE OF STATS
-		case /\/manage\?page=stats/.test(path):
-			pageConfig(`${locale["documentTitleManage_core"]} - ${locale["MMenuStats_core"]}`);
-			
-			break;
-		
-		// CASE OF PRODUCTS CONFIG
-		case /\/manage\?page=productsConfig/.test(path):
-			
-			// Product filter
-			var element = document.createElement("div");
-			element.setAttribute("class", "element");
-			
-			var row = document.createElement("div");
-			row.setAttribute("class", "row");
-			var input = document.createElement("input");
-			input.id = "filterProducts";
-			input.type = "text";
-			var btn = document.createElement("button");
-			btn.id="addProduct";
-			btn.name = "add";
-			btn.addEventListener("click", function() {
-				if($("#newProduct:visible").length == 0) {
-					common.sendRequest(messages.GET_CATEGORIES_REQUEST, {
-						parent: undefined,
-						loc: "fr"
-					})
-					.then(response => {
-						if(response.msg === messages.GET_CATEGORIES_SUCCESS) {				
-							var categories = response.payload.categories;
-	
-							var cat = document.getElementById("cat");
-							$(cat).empty();
-							cat.innerHTML = '<option value="null">Aucun</option>';
-							$.each(categories, function(k, v) {
-								var option = document.createElement("option");
-								if(v.parent == null) {
-									option.disabled = true;
-								}
-								option.value = v.loc_id;
-								option.innerHTML = v.name;
-		
-								cat.appendChild(option);
 							});
-	
-							return response;
-						}
-					})
-					.then(response => {
-						if($("#cat option").length != 0) {
-							common.initCustomSelects();
-						}
-
-						$("#newProduct").slideDown("normal");
-					});
-				} else {
-					console.log($("#title").val());
-					if($("#title").val() !== "") {
-						var img = [];
-						$(".custom-img-select").children("div").children("img:first-child").each((k, v) => {
-							if($(v).next().attr('name') === "default") {
-								img.push([v.src, 1]);
-							} else {
-								img.push([v.src, 0]);
-							}
+							buyOpt.addEventListener("mouseleave", function() {
+								if($(this).children(":visible").length !== 0) {
+									var t = this
+									optTimeout = setTimeout(function() {
+										$(t).fadeOut(100);
+										$(t).parent().next().children("div:nth-child(2)").css("display", "flex").hide().fadeIn(100);
+										$(t).parent().next().children("div:nth-child(3)").fadeOut(100);
+									}, 1);
+								}
+							});
+							buyOpt.addEventListener("mouseenter", function() {
+								clearTimeout(optTimeout);
+							});
+						
+							productOpt_node.appendChild(price);
+							productOpt_node.appendChild(quickBuy);
+							productOpt_node.appendChild(buy);
+						
+							product_node.appendChild(productImg_node);
+							product_node.appendChild(productInfo_node);
+							product_node.appendChild(productOpt_node);
+						
+							productList_node.appendChild(product_node);
 						});
-						console.log(img);
+					
+						$("#content").append(button);
+						$("#content").append(productList_node);
+					
+						return response;
+					}
+				})
+				.then(response => {
+					callback();
+				});
+				break;
+		
+			// CASE OF STATS
+			case /\/manage\?page=stats/.test(path):
+				pageConfig(`${locale["documentTitleManage_core"]} - ${locale["MMenuStats_core"]}`);
 				
-						common.sendRequest(messages.ADD_NEW_PRODUCT_REQUEST, {
-							img: img,
-							title: encodeURIComponent($("#title").val()),
-							short_description: encodeURIComponent($("#sdesc").val()),
-							description: encodeURIComponent($("#desc").val()),
-							price: $("#price").val(),
-							category: $("#cat").val()
+				callback();
+				break;
+		
+			// CASE OF PRODUCTS CONFIG
+			case /\/manage\?page=productsConfig/.test(path):
+			
+				// Product filter
+				var element = document.createElement("div");
+				element.setAttribute("class", "element");
+			
+				var row = document.createElement("div");
+				row.setAttribute("class", "row");
+				var input = document.createElement("input");
+				input.id = "filterProducts";
+				input.type = "text";
+				var btn = document.createElement("button");
+				btn.id="addProduct";
+				btn.name = "add";
+				btn.addEventListener("click", function() {
+					if($("#newProduct:visible").length == 0) {
+						common.sendRequest(messages.GET_CATEGORIES_REQUEST, {
+							parent: undefined,
+							loc: "fr"
 						})
 						.then(response => {
+							if(response.msg === messages.GET_CATEGORIES_SUCCESS) {				
+								var categories = response.payload.categories;
+	
+								var cat = document.getElementById("cat");
+								$(cat).empty();
+								cat.innerHTML = '<option value="null">Aucun</option>';
+								$.each(categories, function(k, v) {
+									var option = document.createElement("option");
+									if(v.parent == null) {
+										option.disabled = true;
+									}
+									option.value = v.loc_id;
+									option.innerHTML = v.name;
+		
+									cat.appendChild(option);
+								});
+	
+								return response;
+							}
+						})
+						.then(response => {
+							if($("#cat option").length != 0) {
+								common.initCustomSelects();
+							}
+
+							$("#newProduct").slideDown("normal");
+						});
+					} else {
+						console.log($("#title").val());
+						if($("#title").val() !== "") {
+							var img = [];
+							$(".custom-img-select").children("div").children("img:first-child").each((k, v) => {
+								if($(v).next().attr('name') === "default") {
+									img.push([v.src, 1]);
+								} else {
+									img.push([v.src, 0]);
+								}
+							});
+							console.log(img);
+				
+							common.sendRequest(messages.ADD_NEW_PRODUCT_REQUEST, {
+								img: img,
+								title: encodeURIComponent($("#title").val()),
+								short_description: encodeURIComponent($("#sdesc").val()),
+								description: encodeURIComponent($("#desc").val()),
+								price: $("#price").val(),
+								category: $("#cat").val()
+							})
+							.then(response => {
+								$("#newProduct").slideUp("normal", function() {
+									resetAddNewProduct();
+								});
+							})
+							.then(response => {
+								getProducts(locale);
+							});
+						} else {
 							$("#newProduct").slideUp("normal", function() {
 								resetAddNewProduct();
 							});
-						})
-						.then(response => {
-							getProducts(locale);
-						});
-					} else {
-						$("#newProduct").slideUp("normal", function() {
-							resetAddNewProduct();
-						});
-					}
-				}
-			});
-			row.appendChild(input);
-			row.appendChild(btn);
-			
-			element.appendChild(row);
-			
-			$("#content").append(element);
-			
-			// Adding new product
-			var element = document.createElement("div");
-			element.id = "newProduct";
-			element.setAttribute("class", "element");
-			
-			var row = document.createElement("div");
-			var span = document.createElement("span");
-			span.innerHTML = "Titre";
-			var input = document.createElement("input");
-			input.id = "title";
-			input.type = "text";
-			row.appendChild(span);
-			row.appendChild(input);
-			
-			element.appendChild(row);
-			
-			var row = document.createElement("div");
-			var span = document.createElement("span");
-			span.innerHTML = "Short Description";
-			var textarea = document.createElement("textarea");
-			textarea.id = "sdesc";
-			row.appendChild(span);
-			row.appendChild(textarea);
-			
-			element.appendChild(row);
-			
-			var row = document.createElement("div");
-			var span = document.createElement("span");
-			span.innerHTML = "Description";
-			var textarea = document.createElement("textarea");
-			textarea.id = "desc";
-			row.appendChild(span);
-			row.appendChild(textarea);
-			
-			element.appendChild(row);
-			
-			var row = document.createElement("div");
-			var span = document.createElement("span");
-			span.innerHTML = "Catégorie";
-			var selectContainer = document.createElement("div");
-			selectContainer.setAttribute("class", "custom-select cat");
-			var select = document.createElement("select");
-			select.id = "cat";
-			select.innerHTML = '<option value="null">Aucun</option>';
-			selectContainer.appendChild(select);
-			row.appendChild(span);
-			row.appendChild(selectContainer);
-			
-			element.appendChild(row);
-			
-			var row = document.createElement("div");
-			var span = document.createElement("span");
-			span.innerHTML = "Prix";
-			var input = document.createElement("input");
-			input.id = "price";
-			input.type = "number";
-			input.min = 0;
-			row.appendChild(span);
-			row.appendChild(input);
-			
-			element.appendChild(row);
-			
-			var row = document.createElement("div");
-			var input = document.createElement("input");
-			input.setAttribute("class", "img-select");
-			input.type = "file";
-			input.accept = "image/*";
-			input.multiple = true;
-			var container = document.createElement("div");
-			container.setAttribute("class", "custom-img-select");
-			row.appendChild(input);
-			row.appendChild(container);
-			
-			element.appendChild(row);
-			
-			$("#content").append(element);
-			$(element).hide();
-			
-			var element = document.createElement("div");
-			element.setAttribute("class", "element");
-			element.id = "productList";
-			
-			$("#content").append(element);
-			
-			// Script
-			$("#loadingScreen").css("display", "flex").hide().fadeIn(50);
-			$("#productList").slideUp(100);
-			$(document).css({"background-color": "rgba(0, 0, 0, 0.5)"});
-			common.sendRequest(messages.GET_PRODUCT_DATA_REQUEST, {
-				filter: "",
-				loc: "en"
-			})
-			.then(response => {
-				if(response.msg === messages.GET_PRODUCT_DATA_SUCCESS) {
-					showProducts(locale, response.payload.products);
-					common.fillLocaleValues(locale);
-				}
-				
-				return response;
-			})
-			.then(response => {
-				$("#loadingScreen").fadeOut(50);
-				$("#productList").css("display", "flex").hide().slideDown(100);
-				$(document).css({"background-color": "rgba(0, 0, 0, 0)"});
-			});
-			break;
-		
-		// CASE OF LOCALE CONFIG
-		case /\/manage\?page=localeConfig/.test(path):
-			pageConfig(`${locale["documentTitleManage_core"]} - ${locale["MMenuConfigLocFiles_core"]}`);
-			
-			var element = document.createElement("div");
-			element.setAttribute("class", "element");
-			
-			var row = document.createElement("div");
-			row.setAttribute("class", "row");
-			var selectContainer = document.createElement("div");
-			selectContainer.setAttribute("class", "custom-select");
-			var select = document.createElement("select");
-			select.id = "lang";
-			selectContainer.appendChild(select);
-			
-			var input = document.createElement("input");
-			input.id = "newLocFile";
-			input.type = "text";
-			var aButton = document.createElement("button");
-			aButton.name = "add";
-			aButton.id = "addFile";
-			var dButton = document.createElement("button");
-			dButton.name = "delete";
-			dButton.id = "delFile";
-			
-			row.appendChild(selectContainer);
-			row.appendChild(input);
-			row.appendChild(aButton);
-			row.appendChild(dButton);
-			
-			element.appendChild(row);
-			
-			$("#content").append(element);
-			
-			var element = document.createElement("div");
-			element.setAttribute("class", "element");
-			element.id = "keyList";
-			
-			$("#content").append(element);
-			
-			// Script
-			common.sendRequest(messages.GET_FILES_FROM_PATH_REQUEST, {})
-			.then(response => {
-				if(response.msg === messages.GET_FILES_FROM_PATH_SUCCESS) {
-					var files = response.payload.files;
-					
-					var lang = document.getElementById("lang");
-					$.each(files, function(k, v) {
-						var option = document.createElement("option");
-						option.value = v
-						option.innerHTML = v;
-						
-						lang.appendChild(option);
-					});
-					
-					showLocaleKeyValuePair(locale);
-					
-					return response
-				}
-			})
-			.then(response => {
-				common.initCustomSelects();
-				// INITALIZE SELECTS EVENT
-				document.querySelectorAll(".select-items").forEach(item => {
-					item.addEventListener("click", function(evt) {
-						showLocaleKeyValuePair(locale);
-					});
-				});
-				common.fillLocaleValues(locale);
-			});
-			break;
-		
-		// CASE OF CATEGORIES CONFIG
-		case /\/manage\?page=productsCategories/.test(path):
-			pageConfig(`${locale["documentTitleManage_core"]} - ${locale["MMenuProductsCat_core"]}`);
-			
-			var element = document.createElement("div");
-			element.setAttribute("class", "element");
-			
-			var row = document.createElement("div");
-			row.setAttribute("class", "row");
-			var selectContainer = document.createElement("div");
-			selectContainer.setAttribute("class", "custom-select cat");
-			var select = document.createElement("select");
-			select.id = "cat";
-			selectContainer.appendChild(select);
-			
-			var input = document.createElement("input");
-			input.id = "newCat";
-			input.type = "text";
-			var aButton = document.createElement("button");
-			aButton.name = "add";
-			aButton.id = "addCat";
-			
-			row.appendChild(selectContainer);
-			row.appendChild(input);
-			row.appendChild(aButton);
-			
-			element.appendChild(row);
-			
-			$("#content").append(element);
-			
-			var element = document.createElement("div");
-			element.setAttribute("class", "element");
-			element.id = "catList";
-			
-			$("#content").append(element);
-			
-			// Script
-			common.sendRequest(messages.GET_CATEGORIES_REQUEST, {
-				parent: null,
-				loc: localStorage.getItem("locale")
-			})
-			.then(response => {
-				if(response.msg === messages.GET_CATEGORIES_SUCCESS) {
-					var categories = response.payload.categories;
-					
-					var cat = document.getElementById("cat");
-					$.each(categories, function(k, v) {
-						var option = document.createElement("option");
-						option.value = v.loc_id;
-						option.innerHTML = v.name;
-						
-						cat.appendChild(option);
-					});
-					
-					return locale;
-				}
-			})
-			.then(response => {
-				if($("#cat option").length != 0) {
-					common.initCustomSelects();
-					showSubCategories(locale);
-				}
-				
-				// Adds new category
-				$("#addCat").click(function() {
-					if($("#newCat").val() != "") {
-						common.sendRequest(messages.ADD_CATEGORY_REQUEST, {
-							name: $("#newCat").val(),
-							parent: null
-						})
-						.then(response => {
-							if(response.msg === messages.ADD_CATEGORY_SUCCESS) {
-								var val = $("#newCat").val();
-								
-								$("#newCat").val("");
-								$("#cat").append(`<option value="${response.payload.key}">${val}</option>`);
-								$("#cat").val(response.payload.key);
-								showSubCategories(locale);
-							}
-						});
+						}
 					}
 				});
-			});
-			break;
-		
-		// CASE OF MANAGE
-		case /\/manage/.test(path):
-			pageConfig(locale["documentTitleManage_core"]);
-			//Manage's login
-			var span = document.createElement("span");
-			span.innerHTML = "UserName";
-			var input = document.createElement("input");
-			input.id = "userId";
-			input.type = "text";
-			$("#content").append(span);
-			$("#content").append(input);
+				row.appendChild(input);
+				row.appendChild(btn);
 			
-			var span = document.createElement("span");
-			span.innerHTML = "Password";
-			var input = document.createElement("input");
-			input.id = "password";
-			input.type = "text";
-			$("#content").append(span);
-			$("#content").append(input);
+				element.appendChild(row);
 			
-			var input = document.createElement("input");
-			input.id = "login";
-			input.type = "button";
-			input.value = "Log in";
-			input.addEventListener("click", function() {
-				var userId = $("#userId").val();
-				var password = $("#password").val();
-				common.sendRequest(messages.PARTNER_LOGIN_REQUEST, {
-					user_id: userId,
-					pass: password
+				$("#content").append(element);
+			
+				// Adding new product
+				var element = document.createElement("div");
+				element.id = "newProduct";
+				element.setAttribute("class", "element");
+			
+				var row = document.createElement("div");
+				var span = document.createElement("span");
+				span.innerHTML = "Titre";
+				var input = document.createElement("input");
+				input.id = "title";
+				input.type = "text";
+				row.appendChild(span);
+				row.appendChild(input);
+			
+				element.appendChild(row);
+			
+				var row = document.createElement("div");
+				var span = document.createElement("span");
+				span.innerHTML = "Short Description";
+				var textarea = document.createElement("textarea");
+				textarea.id = "sdesc";
+				row.appendChild(span);
+				row.appendChild(textarea);
+			
+				element.appendChild(row);
+			
+				var row = document.createElement("div");
+				var span = document.createElement("span");
+				span.innerHTML = "Description";
+				var textarea = document.createElement("textarea");
+				textarea.id = "desc";
+				row.appendChild(span);
+				row.appendChild(textarea);
+			
+				element.appendChild(row);
+			
+				var row = document.createElement("div");
+				var span = document.createElement("span");
+				span.innerHTML = "Catégorie";
+				var selectContainer = document.createElement("div");
+				selectContainer.setAttribute("class", "custom-select cat");
+				var select = document.createElement("select");
+				select.id = "cat";
+				select.innerHTML = '<option value="null">Aucun</option>';
+				selectContainer.appendChild(select);
+				row.appendChild(span);
+				row.appendChild(selectContainer);
+			
+				element.appendChild(row);
+			
+				var row = document.createElement("div");
+				var span = document.createElement("span");
+				span.innerHTML = "Prix";
+				var input = document.createElement("input");
+				input.id = "price";
+				input.type = "number";
+				input.min = 0;
+				row.appendChild(span);
+				row.appendChild(input);
+			
+				element.appendChild(row);
+			
+				var row = document.createElement("div");
+				var input = document.createElement("input");
+				input.setAttribute("class", "img-select");
+				input.type = "file";
+				input.accept = "image/*";
+				input.multiple = true;
+				var container = document.createElement("div");
+				container.setAttribute("class", "custom-img-select");
+				row.appendChild(input);
+				row.appendChild(container);
+			
+				element.appendChild(row);
+			
+				$("#content").append(element);
+				$(element).hide();
+			
+				var element = document.createElement("div");
+				element.setAttribute("class", "element");
+				element.id = "productList";
+			
+				$("#content").append(element);
+			
+				// Script
+				$("#loadingScreen").css("display", "flex").hide().fadeIn(50);
+				$("#productList").slideUp(100);
+				$(document).css({"background-color": "rgba(0, 0, 0, 0.5)"});
+				common.sendRequest(messages.GET_PRODUCT_DATA_REQUEST, {
+					filter: "",
+					loc: "en"
 				})
-				.then(response => {		
-					if(response.msg === messages.PARTNER_LOGIN_SUCCESS) {
-						console.log(response.payload.token);
-						localStorage.setItem("x-access-token", response.payload.token);
-		
-						window.location.href = "/manage?page=stats";
-					} else if(response.msg === messages.LOGIN_USERNAME_ERROR) {
-						console.log("Username doesn't exists");
-					} else if(response.msg === messages.LOGIN_PASSWORD_ERROR) {
-						console.log("Password is wrong");
+				.then(response => {
+					if(response.msg === messages.GET_PRODUCT_DATA_SUCCESS) {
+						showProducts(locale, response.payload.products);
+						common.fillLocaleValues(locale);
 					}
+				
+					return response;
+				})
+				.then(response => {
+					$("#loadingScreen").fadeOut(50);
+					$("#productList").css("display", "flex").hide().slideDown(100);
+					$(document).css({"background-color": "rgba(0, 0, 0, 0)"});
+				})
+				.then(response => {
+					callback();
 				});
-			});
-			$("#content").append(input);
-			break;
-	}
+				break;
+		
+			// CASE OF LOCALE CONFIG
+			case /\/manage\?page=localeConfig/.test(path):
+				pageConfig(`${locale["documentTitleManage_core"]} - ${locale["MMenuConfigLocFiles_core"]}`);
+			
+				var element = document.createElement("div");
+				element.setAttribute("class", "element");
+			
+				var row = document.createElement("div");
+				row.setAttribute("class", "row");
+				var selectContainer = document.createElement("div");
+				selectContainer.setAttribute("class", "custom-select");
+				var select = document.createElement("select");
+				select.id = "lang";
+				selectContainer.appendChild(select);
+			
+				var input = document.createElement("input");
+				input.id = "newLocFile";
+				input.type = "text";
+				var aButton = document.createElement("button");
+				aButton.name = "add";
+				aButton.id = "addFile";
+				var dButton = document.createElement("button");
+				dButton.name = "delete";
+				dButton.id = "delFile";
+			
+				row.appendChild(selectContainer);
+				row.appendChild(input);
+				row.appendChild(aButton);
+				row.appendChild(dButton);
+			
+				element.appendChild(row);
+			
+				$("#content").append(element);
+			
+				var element = document.createElement("div");
+				element.setAttribute("class", "element");
+				element.id = "keyList";
+			
+				$("#content").append(element);
+			
+				// Script
+				common.sendRequest(messages.GET_FILES_FROM_PATH_REQUEST, {})
+				.then(response => {
+					if(response.msg === messages.GET_FILES_FROM_PATH_SUCCESS) {
+						var files = response.payload.files;
+					
+						var lang = document.getElementById("lang");
+						$.each(files, function(k, v) {
+							var option = document.createElement("option");
+							option.value = v
+							option.innerHTML = v;
+						
+							lang.appendChild(option);
+						});
+					
+						showLocaleKeyValuePair(locale);
+					
+						return response
+					}
+				})
+				.then(response => {
+					common.initCustomSelects();
+					// INITALIZE SELECTS EVENT
+					document.querySelectorAll(".select-items").forEach(item => {
+						item.addEventListener("click", function(evt) {
+							showLocaleKeyValuePair(locale);
+						});
+					});
+					common.fillLocaleValues(locale);
+				})
+				.then(response => {
+					callback();
+				});
+				break;
+		
+			// CASE OF CATEGORIES CONFIG
+			case /\/manage\?page=productsCategories/.test(path):
+				pageConfig(`${locale["documentTitleManage_core"]} - ${locale["MMenuProductsCat_core"]}`);
+			
+				var element = document.createElement("div");
+				element.setAttribute("class", "element");
+			
+				var row = document.createElement("div");
+				row.setAttribute("class", "row");
+				var selectContainer = document.createElement("div");
+				selectContainer.setAttribute("class", "custom-select cat");
+				var select = document.createElement("select");
+				select.id = "cat";
+				selectContainer.appendChild(select);
+			
+				var input = document.createElement("input");
+				input.id = "newCat";
+				input.type = "text";
+				var aButton = document.createElement("button");
+				aButton.name = "add";
+				aButton.id = "addCat";
+			
+				row.appendChild(selectContainer);
+				row.appendChild(input);
+				row.appendChild(aButton);
+			
+				element.appendChild(row);
+			
+				$("#content").append(element);
+			
+				var element = document.createElement("div");
+				element.setAttribute("class", "element");
+				element.id = "catList";
+			
+				$("#content").append(element);
+			
+				// Script
+				common.sendRequest(messages.GET_CATEGORIES_REQUEST, {
+					parent: null,
+					loc: localStorage.getItem("locale")
+				})
+				.then(response => {
+					if(response.msg === messages.GET_CATEGORIES_SUCCESS) {
+						var categories = response.payload.categories;
+					
+						var cat = document.getElementById("cat");
+						$.each(categories, function(k, v) {
+							var option = document.createElement("option");
+							option.value = v.loc_id;
+							option.innerHTML = v.name;
+						
+							cat.appendChild(option);
+						});
+					
+						return locale;
+					}
+				})
+				.then(response => {
+					if($("#cat option").length != 0) {
+						common.initCustomSelects();
+						showSubCategories(locale);
+					}
+				
+					// Adds new category
+					$("#addCat").click(function() {
+						if($("#newCat").val() != "") {
+							common.sendRequest(messages.ADD_CATEGORY_REQUEST, {
+								name: $("#newCat").val(),
+								parent: null
+							})
+							.then(response => {
+								if(response.msg === messages.ADD_CATEGORY_SUCCESS) {
+									var val = $("#newCat").val();
+								
+									$("#newCat").val("");
+									$("#cat").append(`<option value="${response.payload.key}">${val}</option>`);
+									$("#cat").val(response.payload.key);
+									showSubCategories(locale);
+								}
+							});
+						}
+					});
+				})
+				.then(response => {
+					callback();
+				});
+				break;
+		
+			// CASE OF MANAGE
+			case /\/manage/.test(path):
+				pageConfig(locale["documentTitleManage_core"]);
+				//Manage's login
+				var span = document.createElement("span");
+				span.innerHTML = "UserName";
+				var input = document.createElement("input");
+				input.id = "userId";
+				input.type = "text";
+				$("#content").append(span);
+				$("#content").append(input);
+			
+				var span = document.createElement("span");
+				span.innerHTML = "Password";
+				var input = document.createElement("input");
+				input.id = "password";
+				input.type = "text";
+				$("#content").append(span);
+				$("#content").append(input);
+			
+				var input = document.createElement("input");
+				input.id = "login";
+				input.type = "button";
+				input.value = "Log in";
+				input.addEventListener("click", function() {
+					var userId = $("#userId").val();
+					var password = $("#password").val();
+					common.sendRequest(messages.PARTNER_LOGIN_REQUEST, {
+						user_id: userId,
+						pass: password
+					})
+					.then(response => {		
+						if(response.msg === messages.PARTNER_LOGIN_SUCCESS) {
+							console.log(response.payload.token);
+							localStorage.setItem("x-access-token", response.payload.token);
+		
+							window.location.href = "/manage?page=stats";
+						} else if(response.msg === messages.LOGIN_USERNAME_ERROR) {
+							console.log("Username doesn't exists");
+						} else if(response.msg === messages.LOGIN_PASSWORD_ERROR) {
+							console.log("Password is wrong");
+						}
+					});
+				});
+				$("#content").append(input);
+			
+				callback();
+				break;
+		}
+	});
+	
+	
 }
 
 /**********************************************************************
@@ -1743,15 +1767,15 @@ function updateCart(id, amount) {
 	updateCartVisual(false, id, amount);
 }
 
-function updateCartVisual(c, id, amount) {
+function updateCartVisual(c, id, amount, callback) {
 	var cart = JSON.parse(localStorage.getItem("cart"));
 	
 	updateCartSticker(cart);
 	
 	if(c) {
 		if(Object.keys(cart).length != 0) {
-			$("#cart").children("div:first-child").css("display", "flex").hide().fadeIn(100);
-			
+			$("#cart").children("div:last-child").children("div:first-child").empty();
+			var counter = 0;
 			for (const [key, value] of Object.entries(cart)) {
 				common.sendRequest(messages.GET_PRODUCTS_SHORT_DATA_REQUEST, {
 					filter: "",
@@ -1761,9 +1785,14 @@ function updateCartVisual(c, id, amount) {
 				.then(response => {
 					if(response.msg === messages.GET_PRODUCTS_SHORT_DATA_SUCCESS) {
 						addCartComponent(response.payload.products[0], value);
+						counter++;
+						if(counter == Object.keys(cart).length) {
+							callback();
+						}
 					}
 				});
 			}
+			$("#cart").children("div:first-child").css("display", "flex").hide().fadeIn(100);
 		}
 	} else {
 		console.log($("#cart").children("div:last-child").find(`[data-id=${id}]`));
@@ -1780,6 +1809,7 @@ function updateCartVisual(c, id, amount) {
 			.then(response => {
 				if(response.msg === messages.GET_PRODUCTS_SHORT_DATA_SUCCESS) {
 					addCartComponent(response.payload.products[0], amount);
+					callback();
 				}
 			});
 		}
@@ -1892,8 +1922,6 @@ customElements.define("template-remove", TemplateRemove);
 |                            DOCUMENT READY                           |
 **********************************************************************/
 $(document).ready(function() {
-	$(document).off();
-	
 	var loc = localStorage.getItem("locale");
 	if(loc === null) {
 		localStorage.setItem("locale", "fr");
@@ -1906,12 +1934,13 @@ $(document).ready(function() {
 	
 	common.getLocale(localStorage.getItem("locale"))
 	.then(response => {
-		console.log(response);
 		if(response.msg === messages.GET_LOCALE_CONTENT_SUCCESS) {
 			var locale = response.payload.content;
 		
 			// Page specific script
-			getScript(locale);
+			getScript(locale, function() {
+				$("body").fadeIn(100);
+			});
 			
 			window.addEventListener("popstate", function() {
 				common.changePage(function() {
@@ -1924,8 +1953,6 @@ $(document).ready(function() {
 			common.initMenuLinks(function() {
 				getScript(locale);
 			});
-			
-			updateCartVisual(true);
 		
 			return locale
 		}

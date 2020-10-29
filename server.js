@@ -75,7 +75,7 @@ server.get("/test", (req, res) => {
 
 server.get("/products", (req, res) => {
 	if(req.headers.xpjax) {
-		fs.readFile(path.join(__dirname, "public/products.html"), function(err, html){
+		fs.readFile(path.join(__dirname, "public/index.html"), function(err, html){
 			if(!err) {
 				var doc = $(html.toString("utf-8"));
 				var content = $(doc).find("#content");

@@ -1,3 +1,12 @@
+@keyframes noJsTransition {
+	0% {
+		opacity: 0;
+	}
+	100% {
+		opacity: 1;
+	}
+}
+
 html {
 	height: 100%;
 	font-family: Arial, Helvetica, "Liberation Sans", FreeSans, sans-serif;
@@ -185,6 +194,10 @@ textarea {
 /***************************************************************
 |                         mobile phones                        |
 ***************************************************************/
+.no-js {
+	animation: 0.5s linear noJsTransition;
+}
+
 .clickable {
 	cursor: pointer;
 }
