@@ -20,25 +20,15 @@ p {
 	width: 1rem;
 }
 
-::-webkit-scrollbar-track {
-	border-radius: 0.625rem;
-}
-
 ::-webkit-scrollbar-thumb {
 	background: rgba(255, 255, 255, 0.05);
 	border-radius: 0.625rem;
 }
 
 a {
-	max-height: 1.125rem;
 	text-decoration: none;
 	color: #ddd;
 	font-size: 1rem;
-	transition: font-size 0.125s ease-in-out;
-}
-
-a:hover {
-	font-size: 1.03125rem;
 }
 
 #header, #footer span {
@@ -370,57 +360,83 @@ textarea {
 }
 
 #cart > div:last-child {
-	position: absolute;
-	top: 2rem;
+	position: fixed;
+	top: 2.625rem;
 	right: 0rem;
-	width: 250px;
+	max-width: 19.375rem;
+	width: 90%;
 	background: #ddd;
 	color: #333;
-	padding: 0.3125rem;
+	padding: 0.625rem;
+}
+
+#cart > div:last-child::before {
+	content: "";
+}
+
+#cart > div:last-child > div {
+	margin: 0.3125rem;
 }
 
 #cart > div:last-child > div:first-child {
+	position: relative;
+	display: inline-grid;
+	width: 100%;
 	max-height: 10rem;
 	overflow-y: scroll;
 }
 
-#cart > div:last-child > div:first-child > div {
+#cart > div:last-child > div:first-child::-webkit-scrollbar {
+	width: 1rem;
+}
+
+#cart > div:last-child > div:first-child::-webkit-scrollbar-thumb {
+	background: rgba(51, 51, 51, 0.5);
+	border-radius: 0.625rem;
+}
+
+#cart > div:last-child > div:first-child > a {
 	position: relative;
-	margin-bottom: 0.625rem;
-}
-
-#cart > div:last-child > div:first-child > div > a {
+	display: block;
 	color: inherit;
+	padding: 0.3125rem;
 }
 
-#cart > div:last-child > div:first-child > div > a > img {
+#cart > div:last-child > div:first-child > a > img {
 	width: 5rem;
 	height: 5rem;
 	float: left;
 	object-fit: contain;
 }
 
-#cart > div:last-child > div:first-child > div > a > p {
+#cart > div:last-child > div:first-child > a > p {
 	font-size: 1rem;
 	padding-left: 1rem;
 	margin: 0;
 }
 
-#cart > div:last-child > div:first-child > div > a > p:first-of-type {
+#cart > div:last-child > div:first-child > a > p:first-of-type {
 	margin-top: 0.75rem;
 	font-weight: bold;
 }
 
-#cart > div:last-child > div:first-child > div > a > p:nth-of-type(2) {
+#cart > div:last-child > div:first-child > a > p:nth-of-type(2) {
 	font-size: 0.75rem;
 }
 
-#cart > div:last-child > div:first-child > div > a > p:last-of-type {
+#cart > div:last-child > div:first-child > a > p:last-of-type {
 	text-align: right;
 }
 
 #cart > div:last-child > div:last-child {
-	margin-bottom: 0.0625rem;
+	margin-bottom: 0rem;
+}
+
+#cart > div:last-child > div:last-child > a {
+	display: block;
+	background: #333;
+	padding: 0.625rem;
+	text-align: center;
 }
 
 .remove{

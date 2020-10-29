@@ -1544,7 +1544,7 @@ function updateCart(id, amount) {
 function updateCartVisual(c, id, amount) {
 	var cart = JSON.parse(localStorage.getItem("cart"));
 	
-	$("#cart").children("div:first-child").html(Object.keys(cart).length);
+	updateCartSticker(cart);
 	
 	if(c) {
 		if(Object.keys(cart).length != 0) {
@@ -1564,7 +1564,8 @@ function updateCartVisual(c, id, amount) {
 			}
 		}
 	} else {
-		if($("#cart").children("div:last-child").find(`[data-id=${id}]`)) {
+		console.log($("#cart").children("div:last-child").find(`[data-id=${id}]`));
+		if($("#cart").children("div:last-child").find(`[data-id=${id}]`).length != 0) {
 			let n = parseInt($("#cart").children("div:last-child").find(`[data-id=${id}]`).find("[quantity]").html().match(/\d+/));
 			console.log(n);
 			$("#cart").children("div:last-child").find(`[data-id=${id}]`).find("[quantity]").html(`Quantité : ${n + amount}`)
@@ -1581,14 +1582,17 @@ function updateCartVisual(c, id, amount) {
 			});
 		}
 	}
+	
+	// calc total
 }
 
-function addCartComponent(product, amount) {
-	var productContainer = document.createElement("div");
-	productContainer.setAttribute("class", "textOverflow");
-	productContainer.setAttribute("data-id", product.id);
-	
+function updateCartSticker(cart) {
+	$("#cart").children("div:first-child").html(Object.keys(cart).length);
+}
+
+function addCartComponent(product, amount) {	
 	var productLink = document.createElement("a");
+	productLink.setAttribute("data-id", product.id);
 	productLink.href = "./products?p=" + product.id;
 	
 	var productImg = document.createElement("img");
@@ -1613,12 +1617,25 @@ function addCartComponent(product, amount) {
 	
 	var productRemove = document.createElement("template-remove");
 	productRemove.setAttribute("class", "remove");
+	productRemove.addEventListener("click", function(e) {
+		e.preventDefault();
+		var cart = JSON.parse(localStorage.getItem("cart"));
+		delete cart[$(this).parent("a").attr("data-id")];
+		
+		localStorage.setItem("cart", JSON.stringify(cart));
+		updateCartSticker(cart);
+		
+		$(this).parent("a").animate({
+			height: 0,
+			opacity: 0
+		}, 250, function() {
+			$(this).remove();
+		})
+	});
 	
 	productLink.appendChild(productRemove);
 	
-	productContainer.appendChild(productLink);
-	
-	$("#cart").children("div:last-child").children("div:first-child").append(productContainer);
+	$("#cart").children("div:last-child").children("div:first-child").append(productLink);
 }
 
 function pageConfig(title, menu) {
