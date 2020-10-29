@@ -87,7 +87,7 @@ server.get("/products", (req, res) => {
 			}
 		});
 	} else {
-		res.render("products");
+		res.render("index");
 	}
 });
 
@@ -112,11 +112,7 @@ server.get("/manage", (req, res) => {
 						}
 					});
 				} else {
-					if(req.query["page"]) {
-						res.render("manage/" + req.query["page"]);
-					} else {
-						res.render("manage");
-					}
+					res.render("index");
 				}
 			} else {
 				res.cookie("x-access-token", token, {
@@ -128,7 +124,7 @@ server.get("/manage", (req, res) => {
 		});
 	} else {
 		if(req.cookies["r"]) {
-			res.render("manage");
+			res.render("index");
 		} else {
 			res.cookie("r", true, {
 				maxAge: 1000,
