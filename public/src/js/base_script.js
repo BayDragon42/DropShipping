@@ -1799,6 +1799,8 @@ function updateCartVisual(c, id, amount, callback) {
 				});
 			}
 			$("#cart").children("div:first-child").css("display", "flex").hide().fadeIn(100);
+		} else {
+			callback();
 		}
 	} else {
 		console.log($("#cart").children("div:last-child").find(`[data-id=${id}]`));

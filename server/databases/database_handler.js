@@ -38,15 +38,16 @@ class DBHandler {
 	}
 	
 	query(query, callback) {
+		var t = this;
 		this.logHandler.debug(query);
 		//var con = this.openConnexion();
 		
 		this.con.query(query, function(err, result) {
 			if(err) {
 				if(err.errno == 1049) {
-					this.logHandler.debug(`${err.sqlMessage} : Failed to connect MySql database`);
+					t.logHandler.debug(`${err} : Failed to connect MySql database`);
 				} else {
-					this.logHandler.debug(`${err.sqlMessage} : Mysql Database connection error`);
+					t.logHandler.debug(`${err} : Mysql Database connection error`);
 				}
 			} else {
 				callback(result);
