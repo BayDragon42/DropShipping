@@ -7,7 +7,52 @@
 	</head>
 	<body>
 		<div id="container">
-			<%- include ("./common/menu.html") %>
+			<div id="menu">
+			</div>
+			<script>
+				function makeMenu(menuData, isSubMenu, level) {
+					menuData = JSON.parse(menuData.split('&#34;').join('"'));
+					
+					var ul = document.createElement("ul");
+					$(ul).attr("level", level);
+					if(isSubMenu) {
+						ul.classList.add("subMenu");
+					}
+					for(var i=0; i < menuData.length; i++) {
+						
+						var li = document.createElement("li");
+						
+						if(menuData[i].value != null) {
+							if(menuData[i].subMenu.length != 0) {
+								li.classList.add("toggleSubMenu");
+							}
+						
+							var link = document.createElement("a");
+							link.classList.add("toggleMenu");
+							if(menuData[i].href != null) {
+								link.href = menuData[i].href;
+							}
+						
+							var span = document.createElement("span");
+							span.innerHTML = menuData[i].value;
+						
+							link.appendChild(span);
+							if(menuData[i].subMenu.length != 0) {
+								link.appendChild(makeMenu(JSON.stringify(menuData[i].subMenu), true, ++level));
+							}
+						} else {
+							li.classList.add("sep");
+						}
+						
+						li.appendChild(link);
+						ul.appendChild(li);
+					}
+					
+					return ul;
+				}
+				
+				$("#menu").append(makeMenu("<%= menusItem %>", false, 0));
+			</script>
 			<div id="header">
 				<%- include ("./common/header.html") %>
 			</div>

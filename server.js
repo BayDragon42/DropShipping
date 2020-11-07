@@ -56,38 +56,19 @@ server.set("view engine", "html");
 server.set("views", __dirname + "/public");
 
 server.get("/", (req, res) => {
-	res.render("index");
-	/*
-	fs.readFile(path.join(__dirname, '/public/index.html'), function(err, html){
-		if(err) {
-			console.log(err);
-		} else {
-			res.set('Content-Type', 'text/html');
-			res.end(new Buffer(html));
-		}
+	requestHandler.getMenu(1, function(data) {
+		res.render("index", {menusItem: JSON.stringify(data)});
 	});
-	*/
-});
-
-server.get("/test", (req, res) => {
-	res.render("products");
 });
 
 server.get("/products", (req, res) => {
+	// If access via inner link
 	if(req.headers.xpjax) {
-		fs.readFile(path.join(__dirname, "public/index.html"), function(err, html){
-			if(!err) {
-				var doc = $(html.toString("utf-8"));
-				var content = $(doc).find("#content");
-		
-				res.set('Content-Type', 'text/html');
-				res.end(content.html());
-			} else {
-				console.log(err);
-			}
-		});
+		res.end();
 	} else {
-		res.render("index");
+		requestHandler.getMenu(1, function(data) {
+			res.render("index", {menusItem: JSON.stringify(data)});
+		});
 	}
 });
 
@@ -100,19 +81,11 @@ server.get("/manage", (req, res) => {
 			if(result === messages.VERIFY_CREDENTIALS_SUCCESS) {
 				// If access via inner link
 				if(req.headers.xpjax) {
-					fs.readFile(path.join(__dirname, "public/manage", req.query["page"] + ".html"), function(err, html){
-						if(!err) {
-							var doc = $(html.toString("utf-8"));
-							var content = $(doc).find("#content");
-							
-							res.set('Content-Type', 'text/html');
-							res.end(content.html());
-						} else {
-							console.log(err);
-						}
-					});
+					res.end();
 				} else {
-					res.render("index");
+					requestHandler.getMenu(0, function(data) {
+						res.render("index", {menusItem: JSON.stringify(data)});
+					});
 				}
 			} else {
 				res.cookie("x-access-token", token, {
@@ -124,7 +97,9 @@ server.get("/manage", (req, res) => {
 		});
 	} else {
 		if(req.cookies["r"]) {
-			res.render("index");
+			requestHandler.getMenu(1, function(data) {
+				res.render("index", {menusItem: JSON.stringify(data)});
+			});
 		} else {
 			res.cookie("r", true, {
 				maxAge: 1000,

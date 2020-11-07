@@ -15,6 +15,90 @@ class Requests {
 		this.logHandler = logHandler;
 		this.usersHandler = new users(logHandler);
 	}
+	
+	getMenu(group, callback) {
+		var t = this;
+		var data = [];
+		
+		if(group == 0) {
+			this.dbHandler.query(`SELECT m.id, m.parent_menu, l.name, m.href FROM menus m LEFT JOIN loc_keys lk ON m.value = lk.loc_id LEFT JOIN locale l ON lk.loc_id = l.loc_id WHERE m.item_group = ${group} AND m.parent_menu IS NULL AND (loc = "fr" OR m.value IS NULL)`, function(result) {
+				t.dbHandler.query(`SELECT m.id, m.parent_menu, l.name, m.href FROM menus m LEFT JOIN loc_keys lk ON m.value = lk.loc_id LEFT JOIN locale l ON lk.loc_id = l.loc_id WHERE m.item_group = ${group} AND m.parent_menu IS NOT NULL AND (loc = "fr" OR m.value IS NULL)`, function(result2) {
+					for(var i=0; i<result.length; i++) {
+						var subMenu_data = [];
+						result2.forEach(item => {
+							if(item.parent_menu === result[i].id) {
+								subMenu_data.push({
+									value: item.name,
+									href: item.href,
+									subMenu: []
+								});
+							}
+						});
+						data.push({
+							value: result[i].name,
+							href: "",
+							subMenu: subMenu_data
+						});
+					}
+			
+					callback(data);
+				});
+			});
+		} else {
+			this.getCategories(undefined, "fr", function(result) {
+				var tmp;
+				var subMenu_data = [];
+				result.payload.categories.forEach(item => {
+					if(item.parent == null) {
+						if(tmp) {
+							tmp.subMenu = subMenu_data;
+							data.push(tmp);
+							subMenu_data = [];
+						}
+						
+						tmp = {
+							value: item.name,
+							href: "",
+							subMenu: []
+						};
+					} else {
+						subMenu_data.push({
+							value: item.name,
+							href: "",
+							subMenu: []
+						});
+					}
+				});
+				
+				tmp.subMenu = subMenu_data;
+				data.push(tmp);
+					
+				t.dbHandler.query(`SELECT m.id, m.parent_menu, l.name, m.href FROM menus m LEFT JOIN loc_keys lk ON m.value = lk.loc_id LEFT JOIN locale l ON lk.loc_id = l.loc_id WHERE m.item_group = ${group} AND m.parent_menu IS NULL AND (loc = "fr" OR m.value IS NULL)`, function(result) {
+					t.dbHandler.query(`SELECT m.id, m.parent_menu, l.name, m.href FROM menus m LEFT JOIN loc_keys lk ON m.value = lk.loc_id LEFT JOIN locale l ON lk.loc_id = l.loc_id WHERE m.item_group = ${group} AND m.parent_menu IS NOT NULL AND (loc = "fr" OR m.value IS NULL)`, function(result2) {
+						for(var i=0; i<result.length; i++) {
+							subMenu_data = [];
+							result2.forEach(item => {
+								if(item.parent_menu === result[i].id) {
+									subMenu_data.push({
+										value: item.name,
+										href: item.href,
+										subMenu: []
+									});
+								}
+							});
+							data.push({
+								value: result[i].name,
+								href: "",
+								subMenu: subMenu_data
+							});
+						}
+					
+						callback(data);
+					});
+				});
+			});
+		}
+	}
 
 	authentificatePartnerUser(user_id, pass, callback) {
 		var t = this;
