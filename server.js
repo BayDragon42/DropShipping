@@ -72,6 +72,17 @@ server.get("/products", (req, res) => {
 	}
 });
 
+server.get("/cart", (req, res) => {
+	// If access via inner link
+	if(req.headers.xpjax) {
+		res.end();
+	} else {
+		requestHandler.getMenu(1, function(data) {
+			res.render("index", {menusItem: JSON.stringify(data)});
+		});
+	}
+});
+
 server.get("/manage", (req, res) => {
 	var token = req.cookies["x-access-token"];
 	if(token != undefined) {

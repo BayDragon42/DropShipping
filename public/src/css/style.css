@@ -394,15 +394,11 @@ textarea {
 	padding: 0.625rem;
 }
 
-#cart > div:last-child::before {
-	content: "";
-}
-
 #cart > div:last-child > div {
 	margin: 0.3125rem;
 }
 
-#cart > div:last-child > div:first-child {
+.cartList {
 	position: relative;
 	display: inline-grid;
 	width: 100%;
@@ -410,45 +406,50 @@ textarea {
 	overflow-y: scroll;
 }
 
-#cart > div:last-child > div:first-child::-webkit-scrollbar {
+.cartList:empty:before {
+	content: "Cart Empty";
+	text-align: center;
+}
+
+.cartList::-webkit-scrollbar {
 	width: 1rem;
 }
 
-#cart > div:last-child > div:first-child::-webkit-scrollbar-thumb {
+.cartList::-webkit-scrollbar-thumb {
 	background: rgba(51, 51, 51, 0.5);
 	border-radius: 0.625rem;
 }
 
-#cart > div:last-child > div:first-child > a {
+.cartList > a {
 	position: relative;
 	display: block;
 	color: inherit;
 	padding: 0.3125rem;
 }
 
-#cart > div:last-child > div:first-child > a > img {
+.cartList > a > img {
 	width: 5rem;
 	height: 5rem;
 	float: left;
 	object-fit: contain;
 }
 
-#cart > div:last-child > div:first-child > a > p {
+.cartList > a > p {
 	font-size: 1rem;
 	padding-left: 1rem;
 	margin: 0;
 }
 
-#cart > div:last-child > div:first-child > a > p:first-of-type {
+.cartList > a > p:first-of-type {
 	margin-top: 0.75rem;
 	font-weight: bold;
 }
 
-#cart > div:last-child > div:first-child > a > p:nth-of-type(2) {
+.cartList > a > p:nth-of-type(2) {
 	font-size: 0.75rem;
 }
 
-#cart > div:last-child > div:first-child > a > p:last-of-type {
+.cartList > a > p:last-of-type {
 	text-align: right;
 }
 
