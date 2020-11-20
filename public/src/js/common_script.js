@@ -1,13 +1,15 @@
 import messages from "./messages.js"
 
-function keepAlive() {
-	sendRequest(messages.SESSION_KEEP_ALIVE_REQUEST, {
-		token: localStorage.getItem("x-access-token")
+function keepAlive(token) {	
+	return new Promise((resolve, reject) => {
+		sendRequest(messages.SESSION_KEEP_ALIVE_REQUEST, token)
+		.then(response => {
+			resolve(response);
+		});
 	});
 }
 
 function sendRequest(msg, payload) {
-	console.log(msg);
 	return $.ajax({
 		type: "POST",
 		url: "req",
@@ -18,6 +20,7 @@ function sendRequest(msg, payload) {
 		})
 	})
 	.then(response => {
+		console.log(JSON.parse(response));
 		return JSON.parse(response);
 	});
 }
@@ -355,7 +358,6 @@ function addTween(tl, parent, obj, currentProp, time, isChild) {
 			height: obj.height
 		}), "children");
 	} else {
-		console.log(parseInt($(obj.obj).parent().css("marginTop")));
 		tl.add(TweenLite.fromTo(obj.obj, time, {
 			left: currentProp.left - parseInt($(obj.obj).css("marginLeft")),
 			top: currentProp.top - parseInt($(obj.obj).css("marginTop")),
@@ -374,9 +376,35 @@ function addTween(tl, parent, obj, currentProp, time, isChild) {
 	});
 }
 
+function setCookie(name, value, expire) {
+	var newCookie = `${name}=${value};`;
+	
+	if(expire !== undefined) {
+		newCookie += ` expires=${expire};`;
+	}
+	
+	document.cookie = newCookie;
+}
+
+function getCookie(name) {
+	var res;
+	var cookies = document.cookie.split(";");
+
+	cookies.every(item => {
+		var pair = item.split("=");
+	
+		if(pair[0] == name) {
+			res = pair[1];
+			return false;
+		}
+	});
+	
+	return res;
+}
+
 export default {
-	keepAlive: function() {
-		keepAlive();
+	keepAlive: function(token) {
+		return keepAlive(token);
 	},
 	getLocale: function(loc, home) {
 		return new Promise((resolve, reject) => {
@@ -408,5 +436,11 @@ export default {
 	},
 	changePage: function(callback) {
 		changePage(callback);
+	},
+	setCookie: function(name, value, expire) {
+		setCookie(name, value, expire);
+	},
+	getCookie: function(name) {
+		return getCookie(name);
 	}
 };

@@ -3,6 +3,7 @@ const users = require("../users/user_handler.js");
 
 const moment = require("moment");
 const jwt = require("jwt-simple");
+const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 
@@ -106,14 +107,12 @@ class Requests {
 			if(result.length != 0) {
 				if(pass === result[0].password) {
 					var expires = moment().add(10, "minutes").valueOf();
-					var token = jwt.encode({
-						user: user_id,
-						pass: pass,
-						group: result[0].id,
-						expires: expires
-					}, key);
 					
-					t.usersHandler.addUser(token, user_id, result[0].id, expires);
+					var hash = crypto.createHmac("sha512", user_id);
+					hash.update(`${expires}`);
+					var token = hash.digest("hex");
+					
+					t.usersHandler.addUser(token, user_id, expires, 0);
 					
 					t.logHandler.log("User '" + user_id + "' logged in.");
 					callback({
@@ -126,13 +125,17 @@ class Requests {
 					t.logHandler.log("User '" + user_id + "' tried to log in.");
 					callback({
 						msg: messages.PARTNER_LOGIN_PASSWORD_ERROR,
-						payload: {}
+						payload: {
+							error: "Wrong password"
+						}
 					});
 				}
 			} else {
 				callback({
 					msg: messages.PARTNER_LOGIN_USERNAME_ERROR,
-					payload: {}
+					payload: {
+						error: "User not found"
+					}
 				});
 			}
 		});
@@ -140,17 +143,17 @@ class Requests {
 
 	authentificateUser(user_id, pass, callback) {
 		var t = this;
-		this.dbHandler.query(`SELECT * FROM users u LEFT JOIN sessions s ON u.session = s.id WHERE u.user_id = "${user_id}"`, function(result) {
+		console.log(`user: ${user_id}, pass: ${pass}`);
+		this.dbHandler.query(`SELECT * FROM users WHERE user_id = "${user_id}"`, function(result) {
 			if(result.length != 0) {
 				if(pass === result[0].password) {
 					var expires = moment().add(10, "minutes").valueOf();
-					var token = jwt.encode({
-						user: user_id,
-						pass: pass,
-						exp: expires
-					}, key);
 					
-					t.usersHandler.addUser(token, user_id, session, expires);
+					var hash = crypto.createHmac("sha512", user_id);
+					hash.update(`${expires}`);
+					var token = hash.digest("hex");
+					
+					t.usersHandler.addUser(token, user_id, expires, 1);
 					
 					t.logHandler.log("User '" + user_id + "' logged in.");
 					callback({
@@ -163,21 +166,25 @@ class Requests {
 					t.logHandler.log("User '" + user_id + "' tried to log in.");
 					callback({
 						msg: messages.LOGIN_PASSWORD_ERROR,
-						payload: {}
+						payload: {
+							error: "Wrong password"
+						}
 					});
 				}
 			} else {
 				callback({
 					msg: messages.LOGIN_USERNAME_ERROR,
-					payload: {}
+					payload: {
+						error: "User not found"
+					}
 				});
 			}
 		});
 	}
 
-	verifyCredentials(token, callback) {
+	verifyCredentials(token, s, callback) {
 		if(token) {
-			var user = this.usersHandler.findUser(token);
+			var user = this.usersHandler.findUser(token, s);
 			if(user != undefined) {
 				if(!user.isExpired() && user.token == token) {
 					callback(messages.VERIFY_CREDENTIALS_SUCCESS);
@@ -203,11 +210,12 @@ class Requests {
 		}
 	}
 	
-	keepAlive(token, callback) {
-		var user = this.usersHandler.findUser(token);
+	keepAlive(token, s, callback) {
+		console.log(`keepAlive token : ${token}`);
+		var user = this.usersHandler.findUser(token, s);
 		if(user != undefined) {
 			this.logHandler.log(`${user.user_id} : keep alive`);
-			var expires = moment().add(10, "minutes").valueOf();
+			var expires = moment().add(1, "minutes").valueOf();
 			
 			user.setExpire(expires);
 			
@@ -632,13 +640,13 @@ class Requests {
 				break;
 			
 			case messages.VERIFY_CREDENTIALS_REQUEST:
-				this.verifyCredentials(payload.token, function(result) {
+				this.verifyCredentials(payload.token, payload.s, function(result) {
 					callback(result);
 				});
 				break;
 			
 			case messages.SESSION_KEEP_ALIVE_REQUEST:
-				this.keepAlive(payload.token, function(result) {
+				this.keepAlive(payload.token, payload.s, function(result) {
 					callback(result);
 				});
 				break;

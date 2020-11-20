@@ -27,6 +27,7 @@ const request = require("./server/requests/requests_handler.js");
 var requestHandler = new request(dbHandler, logHandler);
 
 // NPM require's
+const moment = require("moment");
 const express = require("express");
 const path = require("path");
 const ejs = require("ejs");
@@ -84,10 +85,12 @@ server.get("/cart", (req, res) => {
 });
 
 server.get("/manage", (req, res) => {
-	var token = req.cookies["x-access-token"];
+	var token = req.cookies["mx-access-token"];
+	console.log(req.cookies);
 	if(token != undefined) {
 		requestHandler.parseRequest(messages.VERIFY_CREDENTIALS_REQUEST, {
-			token: token
+			token: token,
+			s: 0
 		}, function(result) {
 			if(result === messages.VERIFY_CREDENTIALS_SUCCESS) {
 				// If access via inner link
@@ -99,9 +102,8 @@ server.get("/manage", (req, res) => {
 					});
 				}
 			} else {
-				res.cookie("x-access-token", token, {
-					maxAge: 0,
-					httpOnly: true
+				res.set({
+					"Set-Cookie": `mx-access-token=${token}; expires=${new Date(moment()).toUTCString()};`
 				});
 				res.redirect("/manage");
 			}
@@ -112,24 +114,42 @@ server.get("/manage", (req, res) => {
 				res.render("index", {menusItem: JSON.stringify(data)});
 			});
 		} else {
-			res.cookie("r", true, {
-				maxAge: 1000,
-				httpOnly: true
+			res.set({
+				"Set-Cookie": `r=${token}; expires=${new Date(moment().add(1, "seconds")).toUTCString()};`
 			});
 			res.redirect("/manage");
 		}
 	}
-	
 });
 
 server.post("/req", (req, res) => {
 	requestHandler.parseRequest(req.body.msg, req.body.payload, function(result) {
-		if (result.msg === messages.LOGIN_SUCCESS || result.msg === messages.PARTNER_LOGIN_SUCCESS || result.msg === messages.SESSION_KEEP_ALIVE_SUCCESS) {
-			res.cookie("x-access-token", result.payload.token, {
-				maxAge: 1000 * 60 * 10,
-				httpOnly: true
-			});
+		
+		// TODO
+		switch(result.msg) {
+			case messages.SESSION_KEEP_ALIVE_SUCCESS:
+				if(req.body.payload.token.mx) {
+					res.set({
+						"Set-Cookie": `mx-access-token=${result.payload.token}; expires=${new Date(moment().add(1, "minutes")).toUTCString()};`
+					});
+				} else {
+					res.set({
+						"Set-Cookie": `cx-access-token=${result.payload.token}; expires=${new Date(moment().add(1, "minutes")).toUTCString()};`
+					});
+				}
+				break;
+			case messages.PARTNER_LOGIN_SUCCESS:
+				res.set({
+					"Set-Cookie": `mx-access-token=${result.payload.token}; expires=${new Date(moment().add(1, "minutes")).toUTCString()};`
+				});
+				break;
+			case messages.LOGIN_SUCCESS:
+				res.set({
+					"Set-Cookie": `cx-access-token=${result.payload.token}; expires=${new Date(moment().add(1, "minutes")).toUTCString()};`
+				});
+				break;
 		}
+		
 		res.send(JSON.stringify(result));
 	});
 });

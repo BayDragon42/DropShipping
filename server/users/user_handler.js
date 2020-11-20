@@ -14,8 +14,8 @@ class UsersHandler {
 		});
 	}
 	
-	addUser(token, user_id, session, expire) {
-		this.users[token] = new User(token, user_id, session, expire, this.logHandler);
+	addUser(token, user_id, expire, session) {
+		this.users[token] = new User(token, user_id, expire, session, this.logHandler);
 	}
 	
 	removeUser(token) {
@@ -24,19 +24,19 @@ class UsersHandler {
 		}
 	}
 	
-	findUser(token) {
-		if(this.users[token] != undefined) {
+	findUser(token, s) {
+		if(this.users[token] != undefined && this.users[token].session == s) {
 			return this.users[token];
 		}
 	}
 }
 
 class User {
-	constructor(token, user_id, session, expire, logHandler) {
+	constructor(token, user_id, expire, session, logHandler) {
 		this.token = token;
 		this.user_id = user_id;
-		this.session = session;
 		this.expire = expire;
+		this.session = session
 		
 		this.logHandler = logHandler;
 	}

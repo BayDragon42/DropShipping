@@ -1,21 +1,22 @@
 import common from './common_script.js'
 import messages from "./messages.js"
 
-var cartMouseClose = function() {
-	$("#cart > div:last-child").hide();
-};
+var keepAliveInterval;
 
 $("body").hide();
 
 function getScript(locale, callback) {
 	$(document).off();
+	$("#cart > div:last-child").hide();
+	$("#log > div:last-child").hide();
 	$("#content").empty();
 	updateCartVisual(true, null, null, function() {
 		var path = window.location.pathname + window.location.search;
 		switch(true) {
 			// CASE OF PRODUCT
 			case /\/products\?p=.*/.test(path):
-				pageConfig(locale["MMenuProducts_core"]);
+				pageConfig(locale["MMenuProducts_core"], 1);
+				
 				// TODO: Enhance the search value spliting (more security control)
 				console.log(window.location.search.split("=")[1]);
 			
@@ -29,7 +30,7 @@ function getScript(locale, callback) {
 						var product = response.payload.products[0];
 						var originalImg = {};
 					
-						pageConfig(decodeURIComponent(product.title));
+						pageConfig(decodeURIComponent(product.title), 1);
 						var productInfo_node = document.createElement("div");
 						productInfo_node.classList.add("element");
 					
@@ -298,7 +299,7 @@ function getScript(locale, callback) {
 		
 			// CASE OF PRODUCTS
 			case /\/products/.test(path):
-				pageConfig(locale["MMenuProducts_core"]);
+				pageConfig(locale["MMenuProducts_core"], 1);
 				var button = document.createElement("button");
 				button.addEventListener("click", function() {
 					if($("#list").hasClass("stk")) {
@@ -331,7 +332,6 @@ function getScript(locale, callback) {
 							productImg_node.addEventListener("click", function() {
 								history.pushState(null, null, "/products?p=" + $(this).children("img").attr("name"));
 								common.changePage(function() {
-									cartMouseClose();
 									getScript(locale);
 								});
 							});
@@ -347,7 +347,6 @@ function getScript(locale, callback) {
 							productInfo_node.addEventListener("click", function() {
 								history.pushState(null, null, "/products?p=" + $(this).prev().children("img").attr("name"));
 								common.changePage(function() {
-									cartMouseClose();
 									getScript(locale);
 								});
 							});
@@ -458,6 +457,7 @@ function getScript(locale, callback) {
 				break;
 			
 			case /\/cart/.test(path):
+				pageConfig("TBD", 1);
 				$("#cart").off("touchend");
 				$("#cart").off("mouseenter");
 				$("#cart").off("mouseleave");
@@ -474,6 +474,8 @@ function getScript(locale, callback) {
 				
 				$("#content").append(cartContentNode);
 				
+				var total = 0;
+				let counter = 0;
 				for (const [key, value] of Object.entries(cart)) {
 					common.sendRequest(messages.GET_PRODUCTS_SHORT_DATA_REQUEST, {
 						filter: "",
@@ -505,8 +507,16 @@ function getScript(locale, callback) {
 							
 							var productInfo = document.createElement("p");
 							productInfo.setAttribute("class", "textOverflow");
-							productInfo.innerHTML = product.price;
+							productInfo.innerHTML = "Prix unit. " + product.price;
 							productLink.appendChild(productInfo);
+							
+							var productInfo = document.createElement("p");
+							productInfo.setAttribute("class", "textOverflow");
+							productInfo.innerHTML = "Tot. " + product.price * value;
+							productLink.appendChild(productInfo);
+							
+							total += product.price * value;
+							console.log(total);
 							
 							var productRemove = document.createElement("template-remove");
 							productRemove.setAttribute("class", "remove");
@@ -529,6 +539,46 @@ function getScript(locale, callback) {
 							productLink.appendChild(productRemove);
 							
 							cartContentNode.appendChild(productLink);
+					
+							counter++;
+							if(counter == Object.keys(cart).length) {
+								var summaryContainerNode = document.createElement("div");
+								summaryContainerNode.setAttribute("class", "element");
+				
+								var row = document.createElement("div");
+								row.setAttribute("class", "row");
+								var span = document.createElement("span");
+								span.innerHTML = "Total:";
+								row.appendChild(span);
+								var span = document.createElement("span");
+								span.innerHTML = total;
+								row.appendChild(span);
+								summaryContainerNode.appendChild(row);
+				
+								var row = document.createElement("div");
+								row.setAttribute("class", "row");
+								var span = document.createElement("span");
+								span.innerHTML = "Total Frais:";
+								row.appendChild(span);
+								var span = document.createElement("span");
+								span.innerHTML = 0;
+								row.appendChild(span);
+								summaryContainerNode.appendChild(row);
+				
+								var row = document.createElement("div");
+								row.setAttribute("class", "row");
+								var button = document.createElement("a");
+								button.href = "/";
+								button.innerHTML = "Retour";
+								row.appendChild(button);
+								var button = document.createElement("a");
+								button.href = "/cart?step=2";
+								button.innerHTML = "Suivant";
+								row.appendChild(button);
+								summaryContainerNode.appendChild(row);
+				
+								$("#content").append(summaryContainerNode);
+							}
 						}
 					});
 				}
@@ -537,18 +587,22 @@ function getScript(locale, callback) {
 				break;
 			
 			case /\/cart\?step=2/.test(path):
+				pageConfig("TBD", 1);
+				// addresses
+				
 				callback();
 				break;
 		
 			// CASE OF STATS
 			case /\/manage\?page=stats/.test(path):
-				pageConfig(`${locale["documentTitleManage_core"]} - ${locale["MMenuStats_core"]}`);
+				pageConfig(`${locale["documentTitleManage_core"]} - ${locale["MMenuStats_core"]}`, 0);
 				
 				callback();
 				break;
 		
 			// CASE OF PRODUCTS CONFIG
 			case /\/manage\?page=productsConfig/.test(path):
+				pageConfig("TBD", 0);
 			
 				// Product filter
 				var element = document.createElement("div");
@@ -751,7 +805,7 @@ function getScript(locale, callback) {
 		
 			// CASE OF LOCALE CONFIG
 			case /\/manage\?page=localeConfig/.test(path):
-				pageConfig(`${locale["documentTitleManage_core"]} - ${locale["MMenuConfigLocFiles_core"]}`);
+				pageConfig(`${locale["documentTitleManage_core"]} - ${locale["MMenuConfigLocFiles_core"]}`, 0);
 			
 				var element = document.createElement("div");
 				element.setAttribute("class", "element");
@@ -826,7 +880,7 @@ function getScript(locale, callback) {
 		
 			// CASE OF CATEGORIES CONFIG
 			case /\/manage\?page=productsCategories/.test(path):
-				pageConfig(`${locale["documentTitleManage_core"]} - ${locale["MMenuProductsCat_core"]}`);
+				pageConfig(`${locale["documentTitleManage_core"]} - ${locale["MMenuProductsCat_core"]}`, 0);
 			
 				var element = document.createElement("div");
 				element.setAttribute("class", "element");
@@ -914,7 +968,8 @@ function getScript(locale, callback) {
 		
 			// CASE OF MANAGE
 			case /\/manage/.test(path):
-				pageConfig(locale["documentTitleManage_core"]);
+				pageConfig(locale["documentTitleManage_core"], 0);
+				
 				//Manage's login
 				var span = document.createElement("span");
 				span.innerHTML = "UserName";
@@ -944,10 +999,7 @@ function getScript(locale, callback) {
 						pass: password
 					})
 					.then(response => {		
-						if(response.msg === messages.PARTNER_LOGIN_SUCCESS) {
-							console.log(response.payload.token);
-							localStorage.setItem("x-access-token", response.payload.token);
-		
+						if(response.msg === messages.PARTNER_LOGIN_SUCCESS) {		
 							window.location.href = "/manage?page=stats";
 						} else if(response.msg === messages.LOGIN_USERNAME_ERROR) {
 							console.log("Username doesn't exists");
@@ -1901,7 +1953,6 @@ function updateCartVisual(c, id, amount, callback) {
 					}
 				});
 			}
-		} else {
 		}
 	}
 	
@@ -1950,8 +2001,8 @@ function addCartComponent(product, amount) {
 	var productRemove = document.createElement("template-remove");
 	productRemove.setAttribute("class", "remove");
 	productRemove.addEventListener("click", function(e) {
-		e.preventDefault();
 		e.stopPropagation();
+		e.preventDefault();
 		var cart = JSON.parse(localStorage.getItem("cart"));
 		delete cart[$(this).parent("a").attr("data-id")];
 		
@@ -1970,10 +2021,59 @@ function addCartComponent(product, amount) {
 	$("#cart").children("div:last-child").children("div:first-child").append(productLink);
 }
 
-function pageConfig(title, menu) {
+function pageConfig(title, ltype) {
 	$(document).attr("title", title);
 	
-	//$("#menu");
+	// 0 = mx; 1 = cx; 1000*60*10 - 1000*30 == 9m30s
+	if(ltype == 0) {
+		common.keepAlive({
+			token: common.getCookie("mx-access-token"),
+			s: 0
+		})
+		.then(response => {
+			if(response.msg === messages.SESSION_KEEP_ALIVE_SUCCESS) {
+				common.setCookie("mx-access-token", response.payload.token, new Date(moment().add(1, "minute")).toUTCString());
+				keepAliveInterval = setInterval(function() {
+					common.keepAlive({
+						token: common.getCookie("mx-access-token"),
+						s: 0
+					})
+					.then(response => {
+						if(response.msg !== messages.SESSION_KEEP_ALIVE_SUCCESS) {
+							clearTimeout(keepAliveInterval);
+						} else {
+							common.setCookie("mx-access-token", response.payload.token, new Date(moment().add(1, "minute")).toUTCString());
+						}
+					});
+				}, 5000);
+			}
+		});
+		
+		$("#RHeader").remove();
+	} else {
+		common.keepAlive({
+			token: common.getCookie("cx-access-token"),
+			s: 1
+		})
+		.then(response => {
+			if(response.msg === messages.SESSION_KEEP_ALIVE_SUCCESS) {
+				common.setCookie("mx-access-token", response.payload.token, new Date(moment().add(1, "minute")).toUTCString());
+				keepAliveInterval = setInterval(function() {
+					common.keepAlive({
+						token: common.getCookie("cx-access-token"),
+						s: 1
+					})
+					.then(response => {
+						if(response.msg !== messages.SESSION_KEEP_ALIVE_SUCCESS) {
+							clearTimeout(keepAliveInterval);
+						} else {
+							common.setCookie("mx-access-token", response.payload.token, new Date(moment().add(1, "minute")).toUTCString());
+						}
+					});
+				}, 5000);
+			}
+		});
+	}
 }
 
 class TemplateRemove extends HTMLElement {
@@ -2021,16 +2121,126 @@ customElements.define("template-remove", TemplateRemove);
 /**********************************************************************
 |                            DOCUMENT READY                           |
 **********************************************************************/
+function initLogEvents() {
+	// Mobile log events
+	$("#log").on("touchend", function(e) {
+		e.stopPropagation();
+		e.preventDefault();
+		$("#log > div:last-child").animate({
+			height: "toggle",
+			opacity: "toggle"
+		}, 250);
+	});
+	
+	// Mouse log events
+	var logTimeout, logMouseToggle, bindLogEnter, bindLogLeave;
+
+	logMouseToggle = function() {
+		$("#log").off("mouseenter");
+		$("#log").off("mouseleave");
+		$("#log > div:last-child").animate({
+			height: "toggle",
+			opacity: "toggle"
+		}, 250, function() {
+			bindLogEnter();
+			bindLogLeave();
+		});
+	}
+
+	bindLogLeave = function() {
+		$("#log").on("mouseleave", function() {
+			if(!$("#log > div:last-child > input").is(":focus")) {
+				logTimeout = setTimeout(function() {
+					logMouseToggle();
+				}, 250);
+			}
+		});
+	}
+
+	bindLogEnter = function() {
+		$("#log").on("mouseenter", function() {
+			if($("#log > div:last-child:visible").length == 0) {
+				logMouseToggle();
+			} else {
+				clearTimeout(logTimeout);
+			}
+		});
+	}
+
+	bindLogEnter();
+	bindLogLeave();
+	
+	// Client login
+	// TODO: Optimise mobile and mouse event like this below
+	$("#log > div:last-child > a").on("click", function(e) {
+		common.sendRequest(messages.LOGIN_REQUEST, {
+			user_id: $(this).siblings("[name=user]").val(),
+			pass: $(this).siblings("[name=pass]").val()
+		})
+		.then(response => {
+			common.setCookie("cx-access-token", response.payload.token, new Date(moment().add(1, "minute")).toUTCString());
+		});
+	});
+	$("#log > div:last-child > a").on("touchend", function(e) {
+		e.stopPropagation();
+	});
+}
+
+function initCartEvents() {
+	// Mobile cart events
+	var cartMobileToggle = function(e) {
+		e.stopPropagation();
+		e.preventDefault();
+		$("#cart > div:last-child").animate({
+			height: "toggle",
+			opacity: "toggle"
+		}, 250);
+	}
+
+	$("#cart").on("touchend", cartMobileToggle);
+
+	// Mouse cart events
+	var cartTimeout, cartMouseToggle, bindCartEnter, bindCartLeave;
+
+	cartMouseToggle = function() {
+		$("#cart").off("mouseenter");
+		$("#cart").off("mouseleave");
+		$("#cart > div:last-child").animate({
+			height: "toggle",
+			opacity: "toggle"
+		}, 250, function() {
+			bindCartEnter();
+			bindCartLeave();
+		});
+	}
+
+	bindCartLeave = function() {
+		$("#cart").on("mouseleave", function() {
+			cartTimeout = setTimeout(function() {
+				cartMouseToggle();
+			}, 250);
+		});
+	}
+
+	bindCartEnter = function() {
+		$("#cart").on("mouseenter", function() {
+			if($("#cart > div:last-child:visible").length == 0) {
+				cartMouseToggle();
+			} else {
+				clearTimeout(cartTimeout);
+			}
+		});
+	}
+
+	bindCartEnter();
+	bindCartLeave();
+}
+
 $(document).ready(function() {
 	var loc = localStorage.getItem("locale");
 	if(loc === null) {
 		localStorage.setItem("locale", "fr");
 	}
-	
-	common.keepAlive();
-	setInterval(function() {
-		common.keepAlive();
-	}, 1000*60*10 - 1000*30);
 	
 	common.getLocale(localStorage.getItem("locale"))
 	.then(response => {
@@ -2044,7 +2254,6 @@ $(document).ready(function() {
 			window.addEventListener("popstate", function() {
 				$("#content").fadeOut(200, function() {
 					common.changePage(function() {
-						cartMouseClose();
 						getScript(locale, function() {
 							$("#content").fadeIn(200);
 						});
@@ -2064,7 +2273,6 @@ $(document).ready(function() {
 						history.pushState(null, null, el.href);
 						$("#content").fadeOut(200, function() {
 							common.changePage(function() {
-								cartMouseClose();
 								getScript(locale, function() {
 									$("#content").fadeIn(200);
 								});
@@ -2075,55 +2283,8 @@ $(document).ready(function() {
 				}
 			});
 			
-			// Mobile cart events
-			var cartMobileToggle = function(e) {
-				e.stopPropagation();
-				e.preventDefault();
-				$("#cart > div:last-child").animate({
-					height: "toggle",
-					opacity: "toggle"
-				}, 250);
-			}
-			
-			$("#cart").on("touchend", function(e) {
-				cartMobileToggle(e);
-			});
-			
-			// Mouse cart events
-			var cartTimeout, cartMouseToggle, bindCartEnter, bindCartLeave;
-			
-			cartMouseToggle = function() {
-				$("#cart").off("mouseenter");
-				$("#cart").off("mouseleave");
-				$("#cart > div:last-child").animate({
-					height: "toggle",
-					opacity: "toggle"
-				}, 250, function() {
-					$("#cart").on("mouseenter", bindCartEnter());
-					$("#cart").on("mouseleave", bindCartLeave());
-				});
-			}
-			
-			bindCartLeave = function() {
-				$("#cart").on("mouseleave", function() {
-					cartTimeout = setTimeout(function() {
-						cartMouseToggle();
-					}, 250);
-				});
-			}
-			
-			bindCartEnter = function() {
-				$("#cart").on("mouseenter", function() {
-					if($("#cart > div:last-child:visible").length == 0) {
-						cartMouseToggle();
-					} else {
-						clearTimeout(cartTimeout);
-					}
-				});
-			}
-			
-			bindCartEnter();
-			bindCartLeave();
+			initLogEvents();
+			initCartEvents();
 			
 			common.fillLocaleValues(locale);
 			common.initSubMenus;

@@ -1,35 +1,44 @@
 <div>
-  <div class="nav-button">
-    <span></span>
-    <span></span>
-    <span></span>
-    <span></span>
-  </div>
-	<div id="cart">
-		<div>
-			0
-		</div>
-		<div>
-			<div class="textOverflow cartList"></div>
+	<div class="nav-button">
+		<span></span>
+		<span></span>
+		<span></span>
+		<span></span>
+	</div>
+	<div id="RHeader">
+	  	<div id="log">
+	  		<div>
+	  		</div>
+	  		<div>
+	  			<input type="text" name="user" placeholder="u">
+	  			<input type="text" name="pass" placeholder="p">
+	  			<a>l</a>
+	  		</div>
+	  	</div>
+		<div id="cart">
 			<div>
-				<a href="">
-					Voir le panier
-				</a>
+				0
+			</div>
+			<div>
+				<div class="textOverflow cartList"></div>
+				<div>
+					<a href="./cart">
+						Voir le panier
+					</a>
+				</div>
 			</div>
 		</div>
 	</div>
 </div>
 <script>
-  let elem = document.getElementsByClassName("nav-button")[0];
-  elem.addEventListener("click", () => {
-    elem.classList.toggle("open");
-    document.getElementById("menu").classList.toggle("nav-open");
-  });
-  
-  $("#cart>div:last-child").hide();
+	let elem = document.getElementsByClassName("nav-button")[0];
+	elem.addEventListener("click", () => {
+		elem.classList.toggle("open");
+		document.getElementById("menu").classList.toggle("nav-open");
+	});
 </script>
 <div>
-  <span>logo</span>
+	<span>logo</span>
 </div>
 <div id="loadingScreen">
 	<div>

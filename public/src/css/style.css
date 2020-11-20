@@ -350,6 +350,53 @@ textarea {
 	left: 50%;
 }
 
+#RHeader {
+	display: flex;
+	margin: 0 !important;
+	margin-right: 0.625rem !important;
+}
+
+#RHeader > :not(:last-child) {
+	margin-right: 0.3125rem;
+}
+
+#RHeader > div {
+	width: 2rem;
+	height: 2rem;
+	background-size: contain;
+}
+
+#log {
+	background-image: url("../img/user.png");
+	background-color: #ddd;
+	background-size: 68% !important;
+	background-repeat: no-repeat;
+	background-position: center;
+	border-radius: 100%;
+}
+
+#log > div:last-child {
+	position: fixed;
+	top: 2.625rem;
+	right: 3rem;
+	width: min-content;
+	background: #ddd;
+	color: #333;
+	padding: 0.625rem;
+}
+
+#log > div:last-child > :not(:last-child) {
+	margin-bottom: 0.3125rem;
+}
+
+#log > div:last-child > a {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 2rem;
+	background-color: #333;
+}
+
 .textOverflow {
 	overflow: hidden;
 	white-space: nowrap;
@@ -359,18 +406,15 @@ textarea {
 #cart {
 	position: relative;
 	background-image: url("../img/caddie.png");
-	width: 1.3125rem;
-	height: 1.3125rem;
-	background-size: contain;
 }
 
 #cart > div:first-child {
 	display: none;
 	justify-content: center;
 	position: absolute;
-	bottom: -0.3125rem;
+	bottom: 0rem;
 	right: -0.3125rem;
-	min-width: 50%;
+	min-width: 35%;
 	font-size: 0.625rem;
 	border: solid 0.125rem blue;
 	background: blue;
@@ -445,7 +489,7 @@ textarea {
 	font-weight: bold;
 }
 
-.cartList > a > p:nth-of-type(2) {
+.cartList > a > p:not(:first-of-type):not(:last-of-type) {
 	font-size: 0.75rem;
 }
 
