@@ -624,6 +624,22 @@ class Requests {
 			});
 		});
 	}
+	
+	logout(token, callback) {
+		if(this.usersHandler.removeUser(token)) {
+			callback({
+				msg: messages.LOGOUT_SUCCESS,
+				payload: {}
+			});
+		} else {
+			callback({
+				msg: messages.LOGOUT_ERROR,
+				payload: {
+					err: "Token not found"
+				}
+			});
+		}
+	}
   
 	parseRequest(msg, payload, callback) {
 		switch(msg) {
@@ -731,6 +747,12 @@ class Requests {
 			
 			case messages.DELETE_LOCALE_FILE_REQUEST:
 				this.deleteLocaleFile(payload.file, function(result) {
+					callback(result);
+				});
+				break;
+			
+			case messages.LOGOUT_REQUEST:
+				this.logout(payload.token, function(result) {
 					callback(result);
 				});
 				break;

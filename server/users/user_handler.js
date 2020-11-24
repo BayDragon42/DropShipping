@@ -21,7 +21,11 @@ class UsersHandler {
 	removeUser(token) {
 		if(this.users[token] != undefined) {
 			delete this.users[token];
+			
+			return true;
 		}
+		
+		return false;
 	}
 	
 	findUser(token, s) {

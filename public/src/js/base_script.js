@@ -6,10 +6,10 @@ var keepAliveInterval;
 $("body").hide();
 
 function getScript(locale, callback) {
-	$(document).off();
 	$("#cart > div:last-child").hide();
 	$("#log > div:last-child").hide();
 	$("#content").empty();
+	
 	updateCartVisual(true, null, null, function() {
 		var path = window.location.pathname + window.location.search;
 		switch(true) {
@@ -2125,7 +2125,7 @@ function initLogEvents() {
 	// Mobile log events
 	$("#log").on("touchend", function(e) {
 		e.stopPropagation();
-		e.preventDefault();
+		//e.preventDefault();
 		$("#log > div:last-child").animate({
 			height: "toggle",
 			opacity: "toggle"
@@ -2172,25 +2172,83 @@ function initLogEvents() {
 	
 	// Client login
 	// TODO: Optimise mobile and mouse event like this below
-	$("#log > div:last-child > a").on("click", function(e) {
-		common.sendRequest(messages.LOGIN_REQUEST, {
-			user_id: $(this).siblings("[name=user]").val(),
-			pass: $(this).siblings("[name=pass]").val()
+	var initLogin, initLogout;
+
+	initLogin = function() {
+		var input = document.createElement("input");
+		input.addEventListener("touchend", function(e) {
+			e.stopPropagation();
 		})
-		.then(response => {
-			common.setCookie("cx-access-token", response.payload.token, new Date(moment().add(1, "minute")).toUTCString());
+		input.type = "text";
+		input.name = "user";
+		input.placeholder = "u";
+		$("#log > div:last-child").append(input);
+
+		var input = document.createElement("input");
+		input.addEventListener("touchend", function(e) {
+			e.stopPropagation();
+		})
+		input.type = "text";
+		input.name = "pass";
+		input.placeholder = "p";
+		$("#log > div:last-child").append(input);
+
+		var login = document.createElement("a");
+		login.addEventListener("click", function() {
+			common.sendRequest(messages.LOGIN_REQUEST, {
+				user_id: $(this).siblings("[name=user]").val(),
+				pass: $(this).siblings("[name=pass]").val()
+			})
+			.then(response => {
+				if(response.msg === messages.LOGIN_SUCCESS) {
+					common.setCookie("cx-access-token", response.payload.token, new Date(moment().add(1, "minute")).toUTCString());
+					
+					location.reload();
+				}
+			});
 		});
-	});
-	$("#log > div:last-child > a").on("touchend", function(e) {
-		e.stopPropagation();
-	});
+		login.addEventListener("touchend", function(e) {
+			e.stopPropagation();
+		});
+		login.innerHTML = "l";
+		$("#log > div:last-child").append(login);
+	}
+
+	initLogout = function() {
+		var logout = document.createElement("a");
+		logout.addEventListener("click", function() {
+			common.sendRequest(messages.LOGOUT_REQUEST, {
+				token: common.getCookie("cx-access-token")
+			})
+			.then(response => {
+				if(response.msg === messages.LOGOUT_SUCCESS) {
+					common.setCookie("cx-access-token", response.payload.token, new Date(moment()).toUTCString());
+					$("#log > div:last-child").empty();
+					
+					location.reload();
+				}
+			});
+		});
+		logout.addEventListener("touchend", function(e) {
+			e.stopPropagation();
+		});
+		logout.innerHTML = "Deco";
+
+		$("#log > div:last-child").append(logout);
+	}
+	
+	if(common.getCookie("cx-access-token")) {
+		initLogout();
+	} else {
+		initLogin();
+	}
 }
 
 function initCartEvents() {
 	// Mobile cart events
 	var cartMobileToggle = function(e) {
 		e.stopPropagation();
-		e.preventDefault();
+		//e.preventDefault();
 		$("#cart > div:last-child").animate({
 			height: "toggle",
 			opacity: "toggle"
