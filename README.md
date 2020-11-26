@@ -26,5 +26,13 @@ Pour démarrer le serveur, taper la commande : `node server -m 1`
 #### Base de donnée
 L'accès se fait vie le navigateur à l'adresse : `localhost/phpmyadmin`  
 
-Sélectionner dans le menu de gauche la base de donnée : `mydb`
+Dans le menu de gauche la base de donnée, cliquer sur le symbole "+" de `mydb` pour voir apparaître les différentes tables
+
 ![alt text](https://github.com/BayDragon42/DropShipping/blob/master/readme_ressources/database.png?raw=true)
+![alt text](https://github.com/BayDragon42/DropShipping/blob/master/readme_ressources/tables.png?raw=true)
+
+Les tables pouvant être intéressantes sont `admin` et `users`. Ceux-ci étant les comptes administrateurs et clients respectivement.
+
+Si il est nécessaire d'ajouter un compte admin ou client, cliquer sur la table concernée dans le menu à gauche et dans les options en haut appuyer sur "Insérer"
+
+![alt text](https://github.com/BayDragon42/DropShipping/blob/master/readme_ressources/insert.png?raw=true)
