@@ -1188,6 +1188,16 @@ function getScript(locale, callback) {
 				break;
 				
 			default:
+				var lien = document.createElement("a");
+				lien.href = "/manage";
+				lien.innerHTML = "Manage";
+				$("#content").append(lien);
+				
+				var lien = document.createElement("a");
+				lien.href = "/products";
+				lien.innerHTML = "Produits";
+				$("#content").append(lien);
+				
 				callback();
 		}
 	});
