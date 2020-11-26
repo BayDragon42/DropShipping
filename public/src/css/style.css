@@ -7,6 +7,19 @@
 	}
 }
 
+
+@font-face {
+    font-family: 'bespokeeh8ejagekt';
+    src: url('./font/tightAllCaps/tightAllCaps.eot');
+    src: url('./font/tightAllCaps/tightAllCaps.eot?#iefix') format('embedded-opentype'),
+         url('./font/tightAllCaps/tightAllCaps.woff2') format('woff2'),
+         url('./font/tightAllCaps/tightAllCaps.woff') format('woff'),
+         url('./font/tightAllCaps/tightAllCaps-webfont.svg#tightAllCaps') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
 html {
 	height: 100%;
 	font-family: Arial, Helvetica, "Liberation Sans", FreeSans, sans-serif;
@@ -36,8 +49,10 @@ p {
 
 a {
 	text-decoration: none;
-	color: #ddd;
+	color: orange;
 	font-size: 1rem;
+	font-family: 'bespokeeh8ejagekt';
+	text-transform: uppercase;
 }
 
 #header, #footer span {
@@ -73,6 +88,18 @@ textarea {
 	color: #ddd;
 	outline: none;
 	resize: none;
+}
+
+.button {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	color: #ddd;
+	text-transform: none;
+	font-family: Arial, Helvetica, "Liberation Sans", FreeSans, sans-serif;
+	height: 2rem;
+	padding: 0 0.625rem;
+	background-color: #333;
 }
 
 /***************************************************************
@@ -243,6 +270,9 @@ textarea {
 }
 
 .sep {
+	border-top: solid 0.0625rem #333;
+	width: 50%;
+	margin: 0.3125rem 0rem;
 }
 
 .nav-open {
@@ -377,9 +407,10 @@ textarea {
 
 #log > div:last-child {
 	position: fixed;
+	display: flex;
+	flex-direction: column;
 	top: 2.625rem;
 	right: 3rem;
-	width: min-content;
 	background: #ddd;
 	color: #333;
 	padding: 0.625rem;
@@ -387,14 +418,6 @@ textarea {
 
 #log > div:last-child > :not(:last-child) {
 	margin-bottom: 0.3125rem;
-}
-
-#log > div:last-child > a {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	height: 2rem;
-	background-color: #333;
 }
 
 .textOverflow {
@@ -864,6 +887,39 @@ textarea {
 
 .element:not(:first-child) {
 	border-top: 0.0625rem solid #ddd;
+}
+
+.col {
+	display: flex;
+	flex-direction: column !important;
+}
+
+.vCardContainer {
+	position: absolute;
+	background-color: #ddd;
+	border: none;
+	width: 80%;
+	margin: auto;
+	padding: 0.625rem;
+	color: #333;
+}
+
+.vCardContainer > div:last-child {
+	overflow-y: auto;
+	max-height: 15rem;
+}
+
+.visitCard {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	margin: 0.625rem 0rem;
+	padding: 0.3125rem;
+	border: 0.125rem solid #333;
+}
+
+.vcActive {
+	border: 0.125rem solid blue !important;
 }
 
 .row {

@@ -640,6 +640,87 @@ class Requests {
 			});
 		}
 	}
+	
+	getUserAddresses(token, callback) {
+		var t = this;
+		var user = this.usersHandler.findUser(token, 1);
+		
+		if(user) {
+			this.dbHandler.query(`SELECT * FROM addresses WHERE user_id = "${user.user_id}"`, function(result) {
+				if(result.length != 0) {
+					t.getLastUsedAddress(token, function(res) {
+						if(res.msg === messages.GET_LAST_USED_ADDRESS_SUCCESS) {
+							callback({
+								msg: messages.GET_USER_ADDRESSES_SUCCESS,
+								payload: {
+									addresses: result,
+									last: res.payload
+								}
+							});
+						} else {
+							callback({
+								msg: messages.GET_USER_ADDRESSES_ERROR,
+								err: "Database returned no last used address"
+							});
+						}
+					});
+				} else {
+					callback({
+						msg: messages.GET_USER_ADDRESSES_ERROR,
+						err: "Database returned nothing"
+					});
+				}
+			});
+		} else {
+			callback({
+				msg: messages.GET_USER_ADDRESSES_ERROR,
+				err: "User not found"
+			});
+		}
+	}
+	
+	getLastUsedAddress(token, callback) {
+		var user = this.usersHandler.findUser(token, 1);
+		
+		if(user) {
+			this.dbHandler.query(`SELECT * FROM addresses WHERE user_id = "${user.user_id}" ORDER BY last_used DESC LIMIT 1`, function(result) {
+				if(result.length == 1) {
+					callback({
+						msg: messages.GET_LAST_USED_ADDRESS_SUCCESS,
+						payload: {
+							name: result[0].name,
+							surname: result[0].surname,
+							address: result[0].address,
+							npa: result[0].npa,
+							town: result[0].town,
+							country: result[0].country,
+							phone: result[0].phone,
+							last_used: result[0].last_used
+						}
+					});
+				} else {
+					callback({
+						msg: messages.GET_LAST_USED_ADDRESS_ERROR,
+						err: "Database returned more than 1 entries."
+					});
+				}
+			});
+		} else {
+			callback({
+				msg: messages.GET_LAST_USED_ADDRESS_ERROR,
+				err: "User not found"
+			});
+		}
+	}
+	
+	updateLastUsedAddress(id, callback) {
+		this.dbHandler.query(`UPDATE addresses SET last_used = CURRENT_TIMESTAMP() WHERE id = ${id}`, function(result) {
+			callback({
+				msg: messages.UPDATE_LAST_USED_ADDRESS_SUCCESS,
+				payload: {}
+			});
+		});
+	}
   
 	parseRequest(msg, payload, callback) {
 		switch(msg) {
@@ -755,6 +836,24 @@ class Requests {
 				this.logout(payload.token, function(result) {
 					callback(result);
 				});
+				break;
+			
+			case messages.GET_USER_ADDRESSES_REQUEST:
+				this.getUserAddresses(payload.token, function(result) {
+					callback(result);
+				});
+				break;
+			
+			case messages.GET_LAST_USED_ADDRESS_REQUEST:
+				this.getLastUsedAddress(payload.token, function(result) {
+					callback(result);
+				});
+				break;
+			
+			case messages.UPDATE_LAST_USED_ADDRESS_REQUEST:
+				this.updateLastUsedAddress(payload.id, function(result) {
+					callback(result)
+				})
 				break;
 		}
 	}

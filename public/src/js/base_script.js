@@ -456,13 +456,12 @@ function getScript(locale, callback) {
 				});
 				break;
 			
-			case /\/cart/.test(path):
-				pageConfig("TBD", 1);
+			// CASE OF CART STEP 1 (PRODUCTS REVIEW)
+			case /\/cart\?step=1/.test(path):
 				$("#cart").off("touchend");
 				$("#cart").off("mouseenter");
 				$("#cart").off("mouseleave");
-			
-			case /\/cart\?step=1/.test(path):
+				
 				var cart = JSON.parse(localStorage.getItem("cart"));
 				
 				var cartContentNode = document.createElement("div");
@@ -568,29 +567,204 @@ function getScript(locale, callback) {
 								var row = document.createElement("div");
 								row.setAttribute("class", "row");
 								var button = document.createElement("a");
+								button.classList.add("button");
 								button.href = "/";
 								button.innerHTML = "Retour";
 								row.appendChild(button);
 								var button = document.createElement("a");
+								button.classList.add("button");
 								button.href = "/cart?step=2";
 								button.innerHTML = "Suivant";
 								row.appendChild(button);
 								summaryContainerNode.appendChild(row);
 				
 								$("#content").append(summaryContainerNode);
+								
+								callback();
 							}
 						}
 					});
 				}
-				
+				break;
+			
+			// CASE OF CART STEP 2 (ADDRESSES)
+			case /\/cart\?step=2/.test(path):
+				pageConfig("TBD", 1);
+				if(common.getCookie("cx-access-token")) {
+					var addressList = document.createElement("div");
+					addressList.id = "addrList";
+					$(addressList).attr("class", "element vCardContainer");
+					
+					$("#content").append(addressList);
+		
+					$(addressList).hide();
+					
+					// Retrieves saved addresses
+					common.sendRequest(messages.GET_LAST_USED_ADDRESS_REQUEST, {
+						token: common.getCookie("cx-access-token")
+					})
+					.then(response => {
+						if(response.msg === messages.GET_LAST_USED_ADDRESS_SUCCESS) {
+							var address = response.payload;
+							
+							var element = document.createElement("div");
+							element.classList.add("element");
+							
+							var span = document.createElement("span");
+							span.classList.add("title");
+							$(span).attr("name", "userName");
+							span.innerHTML = `${address.surname} ${address.name}`;
+							element.appendChild(span);
+							
+							var span = document.createElement("span");
+							$(span).attr("name", "addr");
+							span.innerHTML = address.address;
+							element.appendChild(span);
+							
+							var span = document.createElement("span");
+							$(span).attr("name", "npa");
+							span.innerHTML = `${address.npa} ${address.town}`;
+							element.appendChild(span);
+							
+							var span = document.createElement("span");
+							$(span).attr("name", "country");
+							span.innerHTML = address.country;
+							element.appendChild(span);
+							
+							var span = document.createElement("span");
+							$(span).attr("name", "phone");
+							span.innerHTML = address.phone;
+							element.appendChild(span);
+							
+							var addressSelect = document.createElement("a");
+							addressSelect.classList.add("button");
+							addressSelect.innerHTML = "m";
+							addressSelect.addEventListener("click", function() {
+								
+								common.sendRequest(messages.GET_USER_ADDRESSES_REQUEST, {
+									token: common.getCookie("cx-access-token")
+								})
+								.then(response => {
+									if(response.msg === messages.GET_USER_ADDRESSES_SUCCESS) {
+										var addresses = response.payload.addresses;
+										
+										$("#addrList").empty();
+										
+										var addrListHeader = document.createElement("div");
+										$(addrListHeader).attr("class", "align-right");
+							
+										var productRemove = document.createElement("template-remove");
+										productRemove.setAttribute("class", "remove");
+										productRemove.addEventListener("click", function() {
+											$(this).parents("[class='element vCardContainer']").fadeOut(100);
+										});
+										addrListHeader.appendChild(productRemove);
+										addressList.appendChild(addrListHeader);
+							
+										var cardContainer = document.createElement("div");
+										$(cardContainer).attr("class", "element");
+							
+										addresses.forEach(item => {
+											var visitCard = document.createElement("div");
+											visitCard.addEventListener("click", function() {
+												// Use this address
+												$(this).parents("[class='element vCardContainer']").siblings().children("[name=userName]").html(`${item.surname} ${item.name}`);
+												$(this).parents("[class='element vCardContainer']").siblings().children("[name=addr]").html(item.address);
+												$(this).parents("[class='element vCardContainer']").siblings().children("[name=npa]").html(`${item.npa} ${item.town}`);
+												$(this).parents("[class='element vCardContainer']").siblings().children("[name=country]").html(item.country);
+												$(this).parents("[class='element vCardContainer']").siblings().children("[name=phone]").html(item.phone);
+									
+												localStorage.setItem("userAddrCart", JSON.stringify(item));
+									
+												$(this).parents("[class='element vCardContainer']").fadeOut(100, function() {
+													// Updates last used address
+													common.sendRequest(messages.UPDATE_LAST_USED_ADDRESS_REQUEST, {
+														id: item.id
+													});
+												});
+											});
+											if(item.last_used == response.payload.last.last_used) {
+												$(visitCard).attr("class", "col visitCard vcActive");
+											} else {
+												$(visitCard).attr("class", "col visitCard");
+											}
+											
+											var span = document.createElement("span");
+											span.innerHTML = item.address;
+											visitCard.appendChild(span);
+											
+											var span = document.createElement("span");
+											span.innerHTML = `${item.npa} ${item.town}`;
+											visitCard.appendChild(span);
+											
+											var span = document.createElement("span");
+											span.innerHTML = item.country;
+											visitCard.appendChild(span);
+											
+											var sep = document.createElement("div");
+											sep.classList.add("sep");
+											visitCard.appendChild(sep);
+											
+											var addrModify = document.createElement("a");
+											addrModify.addEventListener("click", function() {
+												// Adds new address
+											});
+											//addrModify.classList.add("button");
+											addrModify.innerHTML = "modify addr";
+											visitCard.appendChild(addrModify);
+											
+											cardContainer.appendChild(visitCard);
+										});
+										
+										addressList.appendChild(cardContainer);
+										
+										var addrListFooter = document.createElement("a");
+										addrListFooter.classList.add("button");
+										addrListFooter.innerHTML = "a";
+										
+										addressList.appendChild(addrListFooter);
+										
+										$(addressList).fadeIn(100);
+									}
+								});
+							});
+							element.appendChild(addressSelect);
+							
+							var row = document.createElement("div");
+							row.setAttribute("class", "row");
+							var button = document.createElement("a");
+							button.classList.add("button");
+							button.href = "/cart?step=1";
+							button.innerHTML = "Retour";
+							row.appendChild(button);
+							var button = document.createElement("a");
+							button.classList.add("button");
+							button.href = "/cart?step=3";
+							button.innerHTML = "Suivant";
+							row.appendChild(button);
+							element.appendChild(row);
+							
+							$("#content").append(element);
+							
+							localStorage.setItem("userAddrCart", JSON.stringify(address));
+							
+							callback();
+						}
+					});
+				} else {
+					// Creates an address form
+					callback();
+				}
+				break;
+			
+			// CASE OF CART STEP 3 (PAYMENT)
+			case /\/cart\?step=3/.test(path):
 				callback();
 				break;
 			
-			case /\/cart\?step=2/.test(path):
-				pageConfig("TBD", 1);
-				// addresses
-				
-				callback();
+			// CASE OF CART
+			case /\/cart/.test(path):
+				document.location.href = `${location.pathname}?step=1`;
 				break;
 		
 			// CASE OF STATS
@@ -1012,6 +1186,9 @@ function getScript(locale, callback) {
 			
 				callback();
 				break;
+				
+			default:
+				callback();
 		}
 	});
 	
@@ -2046,6 +2223,8 @@ function pageConfig(title, ltype) {
 						}
 					});
 				}, 5000);
+			} else {
+				common.setCookie("mx-access-token", "", new Date(moment()).toUTCString());
 			}
 		});
 		
@@ -2057,7 +2236,7 @@ function pageConfig(title, ltype) {
 		})
 		.then(response => {
 			if(response.msg === messages.SESSION_KEEP_ALIVE_SUCCESS) {
-				common.setCookie("mx-access-token", response.payload.token, new Date(moment().add(1, "minute")).toUTCString());
+				common.setCookie("cx-access-token", response.payload.token, new Date(moment().add(1, "minute")).toUTCString());
 				keepAliveInterval = setInterval(function() {
 					common.keepAlive({
 						token: common.getCookie("cx-access-token"),
@@ -2067,10 +2246,12 @@ function pageConfig(title, ltype) {
 						if(response.msg !== messages.SESSION_KEEP_ALIVE_SUCCESS) {
 							clearTimeout(keepAliveInterval);
 						} else {
-							common.setCookie("mx-access-token", response.payload.token, new Date(moment().add(1, "minute")).toUTCString());
+							common.setCookie("cx-access-token", response.payload.token, new Date(moment().add(1, "minute")).toUTCString());
 						}
 					});
 				}, 5000);
+			} else {
+				common.setCookie("cx-access-token", "", new Date(moment()).toUTCString());
 			}
 		});
 	}
@@ -2194,6 +2375,7 @@ function initLogEvents() {
 		$("#log > div:last-child").append(input);
 
 		var login = document.createElement("a");
+		login.classList.add("button");
 		login.addEventListener("click", function() {
 			common.sendRequest(messages.LOGIN_REQUEST, {
 				user_id: $(this).siblings("[name=user]").val(),
@@ -2216,6 +2398,7 @@ function initLogEvents() {
 
 	initLogout = function() {
 		var logout = document.createElement("a");
+		logout.classList.add("button");
 		logout.addEventListener("click", function() {
 			common.sendRequest(messages.LOGOUT_REQUEST, {
 				token: common.getCookie("cx-access-token")
