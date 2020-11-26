@@ -382,7 +382,7 @@ function getScript(locale, callback) {
 							var buy = document.createElement("div");
 							buy.classList.add("clickable");
 							buy.innerHTML = "J'achète";
-							buy.addEventListener("click", function() {
+							buy.addEventListener("touchend", function() {
 								// Adds product to cart
 								updateCart(v.id, parseInt(amount.value));
 							});
@@ -401,7 +401,7 @@ function getScript(locale, callback) {
 								clearTimeout(optTimeout);
 							});
 							// Click only for mobile devices
-							quickBuy.addEventListener("touchstart", function(e) {
+							quickBuy.addEventListener("touchend", function(e) {
 								e.stopPropagation();
 								$(this).parent().prev("div").children("div").css("display", "flex").hide().fadeIn(100);
 								$(this).next().css("display", "flex").hide().fadeIn(100);
@@ -520,7 +520,6 @@ function getScript(locale, callback) {
 							var productRemove = document.createElement("template-remove");
 							productRemove.setAttribute("class", "remove");
 							productRemove.addEventListener("click", function(e) {
-								e.preventDefault();
 								e.stopPropagation();
 								var cart = JSON.parse(localStorage.getItem("cart"));
 								delete cart[$(this).parent("a").attr("data-id")];
@@ -534,6 +533,10 @@ function getScript(locale, callback) {
 								}, 250, function() {
 									$(this).remove();
 								});
+							});
+							productRemove.addEventListener("touchend", function(e) {
+								e.stopPropagation();
+								e.preventDefault();
 							});
 							productLink.appendChild(productRemove);
 							
@@ -2152,10 +2155,17 @@ function updateCartSticker(cart) {
 	if(Object.keys(cart).length != 0) {
 		if($("#cart").children("div:first-child:visible").length == 0) {
 			$("#cart").children("div:first-child").css("display", "flex").hide().fadeIn(100);
+			var link = document.createElement("a");
+			link.classList.add("button");
+			link.href = "/cart";
+			link.innerHTML = "Voir le panier";
+			
+			$("#cart").children("div:last-child").append(link);
 		}
 	} else {
 		if($("#cart").children("div:first-child:visible").length != 0) {
 			$("#cart").children("div:first-child").fadeOut(100);
+			$("#cart").children("div:last-child").children("a").remove();
 		}
 	}
 }
