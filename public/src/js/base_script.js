@@ -53,19 +53,22 @@ function getScript(locale, callback) {
 						});
 						var miniImage_node = document.createElement("div");
 						miniImage_node.classList.add("miniViewer");
-						product.img.forEach(item => {
-							var image = document.createElement("img");
-							image.src = item[0];
-							image.addEventListener("click", function() {
-								var t = this;
-								$(this).parent().next().children("img").fadeOut(100, function() {
-									$(this).attr("src", $(t).attr("src"));
-									$(this).fadeIn(100);
-								});
-							});
 						
-							miniImage_node.appendChild(image);
-						});
+						if(product.img != null) {
+							product.img.forEach(item => {
+								var image = document.createElement("img");
+								image.src = item[0];
+								image.addEventListener("click", function() {
+									var t = this;
+									$(this).parent().next().children("img").fadeOut(100, function() {
+										$(this).attr("src", $(t).attr("src"));
+										$(this).fadeIn(100);
+									});
+								});
+						
+								miniImage_node.appendChild(image);
+							});
+						}
 					
 						// Image Previsualisation
 						var zoom = document.createElement("div");
@@ -78,47 +81,51 @@ function getScript(locale, callback) {
 						var imageSelect_node = document.createElement("div");
 						var image_node = document.createElement("div");
 						var image = document.createElement("img");
-						image.src = product.img.filter(x => x[1] == 1)[0][0];
+						if(product.img == null) {
+							image.src = "src/img/default.jpeg";
+						} else {
+							image.src = product.img.filter(x => x[1] == 1)[0][0];
+							image.addEventListener("click", function() {
+								var bigImg = $('.bigViewer').children('img');
+						
+								assignZoomImg(product.img.filter(x => x[1] == 1)[0][0], bigImg, zoom, function(result) {
+									originalImg = result;
+								});
+						
+								bigImg.attr("src", $(this).attr("src"));
+								miniImage_tl.pause();
+								$("body").find(".bigViewer").css("display", "flex").hide().fadeIn(100, function() {
+									var bigImage_tl = new TimelineMax({
+										repeat: -1
+									})
+									.to(imageSelect_node, scrollTime, {
+										scrollLeft: imageSelect_node.scrollWidth - imageSelect_node.offsetWidth,
+										ease: Power0.easeNone
+									})
+									.to(imageSelect_node, scrollTime, {
+										scrollLeft: 0,
+										ease: Power0.easeNone
+									});
+							
+									imageSelect_node.addEventListener("touchstart", function() {
+										bigImage_tl.pause();
+									});
+							
+									imageSelect_node.addEventListener("mouseenter", function() {
+										bigImage_tl.pause();
+									});
+							
+									imageSelect_node.addEventListener("touchend", function() {
+										bigImage_tl.resume(scrollTime * (imageSelect_node.scrollLeft / (imageSelect_node.scrollWidth - imageSelect_node.offsetWidth)));
+									});
+							
+									imageSelect_node.addEventListener("mouseleave", function() {
+										bigImage_tl.resume(scrollTime * (imageSelect_node.scrollLeft / (imageSelect_node.scrollWidth - imageSelect_node.offsetWidth)));
+									});
+								});
+							});
+						}
 						image_node.appendChild(image);
-						image.addEventListener("click", function() {
-							var bigImg = $('.bigViewer').children('img');
-						
-							assignZoomImg(product.img.filter(x => x[1] == 1)[0][0], bigImg, zoom, function(result) {
-								originalImg = result;
-							});
-						
-							bigImg.attr("src", $(this).attr("src"));
-							miniImage_tl.pause();
-							$("body").find(".bigViewer").css("display", "flex").hide().fadeIn(100, function() {
-								var bigImage_tl = new TimelineMax({
-									repeat: -1
-								})
-								.to(imageSelect_node, scrollTime, {
-									scrollLeft: imageSelect_node.scrollWidth - imageSelect_node.offsetWidth,
-									ease: Power0.easeNone
-								})
-								.to(imageSelect_node, scrollTime, {
-									scrollLeft: 0,
-									ease: Power0.easeNone
-								});
-							
-								imageSelect_node.addEventListener("touchstart", function() {
-									bigImage_tl.pause();
-								});
-							
-								imageSelect_node.addEventListener("mouseenter", function() {
-									bigImage_tl.pause();
-								});
-							
-								imageSelect_node.addEventListener("touchend", function() {
-									bigImage_tl.resume(scrollTime * (imageSelect_node.scrollLeft / (imageSelect_node.scrollWidth - imageSelect_node.offsetWidth)));
-								});
-							
-								imageSelect_node.addEventListener("mouseleave", function() {
-									bigImage_tl.resume(scrollTime * (imageSelect_node.scrollLeft / (imageSelect_node.scrollWidth - imageSelect_node.offsetWidth)));
-								});
-							});
-						});
 					
 						$(".bigViewer").remove();
 						var bigImage_node = document.createElement("div");
@@ -213,35 +220,38 @@ function getScript(locale, callback) {
 						window.addEventListener("resize", function() {
 							initZoomingSize(originalImg, bigImage, zoom, lens);
 						});
-					
-						product.img.forEach(item => {
-							var image = document.createElement("img");
-							image.src = item[0];
-							image.addEventListener("click", function(e) {
-								var t = this;
-								$(".bigViewer").children("img").fadeOut(100, function() {
-									$(this).attr("src", $(t).attr("src"));
-									assignZoomImg(product.img.filter(x => x[1] == 1)[0][0], $(bigImage), zoom, function(result) {
-										originalImg = result;
-									});
-								
-									$(this).fadeIn(100);
-								});
-							
-								e.stopPropagation();
-							});
 						
-							imageSelect_node.appendChild(image);
-						});
+						if(product.img != null) {
+							product.img.forEach(item => {
+								var image = document.createElement("img");
+								image.src = item[0];
+								image.addEventListener("click", function(e) {
+									var t = this;
+									$(".bigViewer").children("img").fadeOut(100, function() {
+										$(this).attr("src", $(t).attr("src"));
+										assignZoomImg(product.img.filter(x => x[1] == 1)[0][0], $(bigImage), zoom, function(result) {
+											originalImg = result;
+										});
+								
+										$(this).fadeIn(100);
+									});
+							
+									e.stopPropagation();
+								});
+						
+								imageSelect_node.appendChild(image);
+							});
+						}
 					
 						bigImage_node.innerHTML = "<span>Click on the image to exit</span>";
 						bigImage_node.appendChild(lens);
 						bigImage_node.appendChild(bigImage);
 						bigImage_node.appendChild(imageSelect_node);
 						bigImage_node.appendChild(zoom);
-					
-					
-						imgContainer_node.appendChild(miniImage_node);
+						
+						if(product.img != null) {
+							imgContainer_node.appendChild(miniImage_node);
+						}
 						imgContainer_node.appendChild(image_node);
 						$("#container").append(bigImage_node);
 					
@@ -337,7 +347,12 @@ function getScript(locale, callback) {
 							});
 							var img = document.createElement("img");
 							img.name = v.id;
-							img.src = v.img;
+							
+							if(v.img == null) {
+								img.src = "src/img/default.jpeg";
+							} else {
+								img.src = v.img;
+							}
 						
 							productImg_node.appendChild(img);
 						
@@ -490,7 +505,11 @@ function getScript(locale, callback) {
 							productLink.href = "./products?p=" + product.id;
 							
 							var productImg = document.createElement("img");
-							productImg.src = product.img;
+							if(v.img == null) {
+								productImg.src = "src/img/default.jpeg";
+							} else {
+								productImg.src = product.img;
+							}
 							productLink.appendChild(productImg);
 							
 							var productInfo = document.createElement("p");
@@ -789,10 +808,11 @@ function getScript(locale, callback) {
 				row.setAttribute("class", "row");
 				var input = document.createElement("input");
 				input.id = "filterProducts";
+				input.placeholder = "filtre produits (à faire)";
 				input.type = "text";
 				var btn = document.createElement("button");
 				btn.id="addProduct";
-				btn.name = "add";
+				btn.innerHTML = locale["MAdd_core"];
 				btn.addEventListener("click", function() {
 					if($("#newProduct:visible").length == 0) {
 						common.sendRequest(messages.GET_CATEGORIES_REQUEST, {
@@ -955,28 +975,29 @@ function getScript(locale, callback) {
 				$("#content").append(element);
 			
 				// Script
-				$("#loadingScreen").css("display", "flex").hide().fadeIn(50);
 				$("#productList").slideUp(100);
-				$(document).css({"background-color": "rgba(0, 0, 0, 0.5)"});
-				common.sendRequest(messages.GET_PRODUCT_DATA_REQUEST, {
-					filter: "",
-					loc: "en"
-				})
-				.then(response => {
-					if(response.msg === messages.GET_PRODUCT_DATA_SUCCESS) {
-						showProducts(locale, response.payload.products);
-						common.fillLocaleValues(locale);
-					}
+				$("#loadingScreen").css("display", "flex").hide().fadeIn(100, function() {
+					$(document).css({"background-color": "rgba(0, 0, 0, 0.5)"});
+					common.sendRequest(messages.GET_PRODUCT_DATA_REQUEST, {
+						filter: "",
+						loc: "en"
+					})
+					.then(response => {
+						if(response.msg === messages.GET_PRODUCT_DATA_SUCCESS) {
+							showProducts(locale, response.payload.products);
+							common.fillLocaleValues(locale);
+						}
 				
-					return response;
-				})
-				.then(response => {
-					$("#loadingScreen").fadeOut(50);
-					$("#productList").css("display", "flex").hide().slideDown(100);
-					$(document).css({"background-color": "rgba(0, 0, 0, 0)"});
-				})
-				.then(response => {
-					callback();
+						return response;
+					})
+					.then(response => {
+						$("#loadingScreen").fadeOut(100);
+						$("#productList").css("display", "flex").hide().slideDown(100);
+						$(document).css({"background-color": "rgba(0, 0, 0, 0)"});
+					})
+					.then(response => {
+						callback();
+					});
 				});
 				break;
 		
@@ -997,12 +1018,13 @@ function getScript(locale, callback) {
 			
 				var input = document.createElement("input");
 				input.id = "newLocFile";
+				input.placeholder = locale["MNewLocFile_core"];
 				input.type = "text";
 				var aButton = document.createElement("button");
-				aButton.name = "add";
+				aButton.innerHTML = locale["MAdd_core"];
 				aButton.id = "addFile";
 				var dButton = document.createElement("button");
-				dButton.name = "delete";
+				dButton.innerHTML = locale["MDeleteVal_core"];
 				dButton.id = "delFile";
 			
 				row.appendChild(selectContainer);
@@ -1072,9 +1094,10 @@ function getScript(locale, callback) {
 			
 				var input = document.createElement("input");
 				input.id = "newCat";
+				input.placeholder = "nvl categorie";
 				input.type = "text";
 				var aButton = document.createElement("button");
-				aButton.name = "add";
+				aButton.innerHTML = locale["MAdd_core"];
 				aButton.id = "addCat";
 			
 				row.appendChild(selectContainer);
@@ -1216,29 +1239,30 @@ function getScript(locale, callback) {
 |                        Product config Scripts                       |
 **********************************************************************/
 function getProducts(locale) {
-	$("#loadingScreen").css("display", "flex").hide().fadeIn(50);
-	$("#productList").slideUp(100);
-	$(document).css({"background-color": "rgba(0, 0, 0, 0.5)"});
-	common.sendRequest(messages.GET_PRODUCT_DATA_REQUEST, {
-		filter: "",
-		loc: "en"
-	})
-	.then(response => {
-		if(response.msg === messages.GET_PRODUCT_DATA_SUCCESS) {
-			showProducts(locale, response.payload.products);
-		}
+	$("#productList").slideUp(100, function() {
+		$("#loadingScreen").css("display", "flex").hide().fadeIn(50);
+		$(document).css({"background-color": "rgba(0, 0, 0, 0.5)"});
+		common.sendRequest(messages.GET_PRODUCT_DATA_REQUEST, {
+			filter: "",
+			loc: "en"
+		})
+		.then(response => {
+			if(response.msg === messages.GET_PRODUCT_DATA_SUCCESS) {
+				showProducts(locale, response.payload.products);
+			}
 
-		return response;
-	})
-	.then(response => {
-		$("#loadingScreen").fadeOut(50);
-		$("#productList").css("display", "flex").hide().slideDown(100);
-		$(document).css({"background-color": "rgba(0, 0, 0, 0)"});
+			return response;
+		})
+		.then(response => {
+			$("#loadingScreen").fadeOut(50);
+			$("#productList").css("display", "flex").hide().slideDown(100);
+			$(document).css({"background-color": "rgba(0, 0, 0, 0)"});
+		});
 	});
 }
 
-function sortImages(old_img, new_img) {
-	var del = old_img.filter(x => !new_img.includes(x));
+function sortImages(product_img, new_img) {
+	var old_img = product_img[0].map((_, col) => product_img.map(row => row[col]))[0];
 	var add = new_img.filter(x => !old_img.includes(x));
 	var changed = [];
 	
@@ -1252,11 +1276,16 @@ function sortImages(old_img, new_img) {
 		}
 	});
 	
-	new_img.forEach(item => {
-		if($('[src="' + item + '"]').next().attr('name') === "default") {
-			changed.push([item, 1]);
+	product_img.forEach(item => {
+		var def = 0;
+		if($('[src="' + item[0] + '"]').next().attr('name') === "default") {
+			def = 1;
 		} else {
-			changed.push([item, 0]);
+			def = 0;
+		}
+		
+		if(item[1] != def) {
+			changed.push([item[0], def]);
 		}
 	});
 	
@@ -1482,7 +1511,7 @@ function showProductData(t, locale, product, loc, callback) {
 			row.setAttribute("class", "row align-right");
 			var uButton = document.createElement("button");
 			uButton.value = product.id;
-			uButton.name = "update";
+			uButton.innerHTML = locale["MAdd_core"];
 			// Update product
 			uButton.addEventListener("click", function() {
 				var img = [];
@@ -1492,7 +1521,7 @@ function showProductData(t, locale, product, loc, callback) {
 				console.log($(this).parent().siblings('[class="row align-left lang"]').find("select").val());
 				common.sendRequest(messages.UPDATE_PRODUCT_DATA_REQUEST, {
 					id: $(this).val(),
-					img: sortImages(product.img[0].map((_, col) => product.img.map(row => row[col]))[0], img),
+					img: sortImages(product.img, img),
 					title: encodeURIComponent($(this).parent().siblings('[class="row title"]').children("input").val()),
 					short_description: encodeURIComponent($(this).parent().siblings('[class="row sdesc"]').children("textarea").val()),
 					description: encodeURIComponent($(this).parent().siblings('[class="row desc"]').children("textarea").val()),
@@ -1541,7 +1570,7 @@ function showProducts(locale, products) {
 		});
 		
 		var dButton = document.createElement("button");
-		dButton.name = "delete";
+		dButton.innerHTML = locale["MAdd_core"];
 		dButton.value = v.id;
 		dButton.innerHTML = locale["MDeleteVal_core"];
 		dButton.addEventListener("click", function(e) {
@@ -1764,7 +1793,7 @@ function showCatKeyValuePair(locale, parent, loc) {
 					});
 	
 					var uButton = document.createElement("button");
-					uButton.name = "update";
+					uButton.innerHTML = locale["MAdd_core"];
 					uButton.disabled = true;
 					uButton.addEventListener("click", function() {
 						common.sendRequest(messages.UPDATE_CATEGORY_REQUEST, {
@@ -1780,7 +1809,7 @@ function showCatKeyValuePair(locale, parent, loc) {
 					});
 	
 					var dButton = document.createElement("button");
-					dButton.name = "delete";
+					dButton.innerHTML = locale["MAdd_core"];
 					dButton.addEventListener("click", function() {
 						common.sendRequest(messages.DELETE_CATEGORY_REQUEST, {
 							key: $(this).siblings("input").attr("name")
@@ -1807,7 +1836,7 @@ function showCatKeyValuePair(locale, parent, loc) {
 				var input = document.createElement("input");
 				$(input).hide();
 				var button = document.createElement("button");
-				button.name = "add";
+				button.innerHTML = locale["MAdd_core"];
 				button.addEventListener("click", function() {
 					if($(this).prev("input:visible").length != 0) {
 						if($(this).prev("input:visible").val() !== "") {
@@ -1887,7 +1916,7 @@ function showSubCategories(locale) {
 			});
 			
 			var uButton = document.createElement("button");
-			uButton.name = "update";
+			uButton.innerHTML = locale["MUpdateKeyVal_core"];
 			uButton.addEventListener("click", function() {
 				common.sendRequest(messages.UPDATE_CATEGORY_REQUEST, {
 					key: $(this).siblings("input").attr("name"),
@@ -1902,7 +1931,7 @@ function showSubCategories(locale) {
 			});
 			
 			var dButton = document.createElement("button");
-			dButton.name = "delete";
+			dButton.innerHTML = locale["MDeleteVal_core"];
 			dButton.addEventListener("click", function() {
 				common.sendRequest(messages.DELETE_CATEGORY_REQUEST, {
 					key: $(this).siblings("input").attr("name")
@@ -2176,7 +2205,11 @@ function addCartComponent(product, amount) {
 	productLink.href = "./products?p=" + product.id;
 	
 	var productImg = document.createElement("img");
-	productImg.src = product.img;
+	if(v.img == null) {
+		productImg.src = "src/img/default.jpeg";
+	} else {
+		productImg.src = product.img;
+	}
 	productLink.appendChild(productImg);
 	
 	var productInfo = document.createElement("p");

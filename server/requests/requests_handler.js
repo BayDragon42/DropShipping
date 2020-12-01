@@ -47,7 +47,7 @@ class Requests {
 			});
 		} else {
 			this.getCategories(undefined, "fr", function(result) {
-				if(result.length > 0) {
+				if(result.payload.categories.length > 0) {
 					var tmp;
 					var subMenu_data = [];
 					result.payload.categories.forEach(item => {
@@ -60,13 +60,13 @@ class Requests {
 						
 							tmp = {
 								value: item.name,
-								href: "",
+								href: null,
 								subMenu: []
 							};
 						} else {
 							subMenu_data.push({
 								value: item.name,
-								href: "",
+								href: null,
 								subMenu: []
 							});
 						}
@@ -91,7 +91,7 @@ class Requests {
 							});
 							data.push({
 								value: result[i].name,
-								href: "",
+								href: null,
 								subMenu: subMenu_data
 							});
 						}
@@ -329,7 +329,7 @@ class Requests {
 			byId = `AND p.id = ${id}`;
 		}
 			
-		this.dbHandler.query(`SELECT DISTINCT p.id, l1.name AS title, l1.loc_id AS title_locId, l2.name AS short_description, l2.loc_id AS sdesc_locId, l3.name AS description, l3.loc_id AS desc_locId, l9.name AS category, l9.loc_id AS cat_locId, i.img, i.default_img, p.price FROM products p
+		this.dbHandler.query(`SELECT DISTINCT p.id, l1.name AS title, l1.loc_id AS title_locId, l2.name AS short_description, l2.loc_id AS sdesc_locId, l3.name AS description, l3.loc_id AS desc_locId, l9.name AS category, l9.loc_id AS cat_locId, i.img, p_i.default_img, p.price FROM products p
 			LEFT JOIN loc_keys lk1 ON p.title = lk1.loc_id
 			LEFT JOIN loc_keys lk2 ON p.short_description = lk2.loc_id
 			LEFT JOIN loc_keys lk3 ON p.description = lk3.loc_id
@@ -338,19 +338,25 @@ class Requests {
 			LEFT JOIN locale l3 ON lk3.loc_id = l3.loc_id
 			LEFT JOIN categories c ON p.category = c.id
 			LEFT JOIN locale l9 ON c.loc_id = l9.loc_id
-			LEFT JOIN images i ON p.id = i.product_id
+			LEFT JOIN products_img p_i ON p_i.product_id = p.id
+			LEFT JOIN images i ON p_i.img = i.img_id
 		WHERE l1.loc = "${loc}" AND l2.loc = "${loc}" AND l3.loc = "${loc}" AND l1.name LIKE "%${filter}%" ${byId}`, function(result) {
 			var data = [];
 			
 			var id = 0;
 			result.forEach(item => {
 				if(id != item.id) {
-					var img = [];
-					result.forEach(item2 => {
-						if(item2.id === item.id) {
-							img.push([item2.img.toString(), item2.default_img]);
-						}
-					});
+					var img;
+					if(item.img != null) {
+						img = [];
+						result.forEach(item2 => {
+							if(item2.id === item.id) {
+								img.push([item2.img.toString(), item2.default_img]);
+							}
+						});
+					} else {
+						img = null;
+					}
 				
 					data.push({
 						id: item.id,
@@ -392,8 +398,9 @@ class Requests {
 			LEFT JOIN locale l2 ON lk2.loc_id = l2.loc_id
 			LEFT JOIN categories c ON p.category = c.id
 			LEFT JOIN locale l3 ON c.loc_id = l3.loc_id
-			LEFT JOIN images i ON p.id = i.product_id
-		WHERE l1.loc = "${loc}" AND l1.name LIKE "%${filter}%" ${byId} AND i.default_img = 1`, function(result) {
+			LEFT JOIN products_img p_i ON p_i.product_id = p.id
+			LEFT JOIN images i ON p_i.img = i.img_id
+		WHERE l1.loc = "${loc}" AND l1.name LIKE "%${filter}%" ${byId} AND (p_i.default_img = 1 OR p_i.default_img IS NULL)`, function(result) {
 			var data = [];
 			
 			var id = 0;
@@ -405,7 +412,7 @@ class Requests {
 						short_description: item.short_description,
 						category: item.category,
 						price: item.price,
-						img: item.img.toString()
+						img: (item.img != null ? item.img.toString() : null)
 					});
 				}
 				
@@ -422,40 +429,50 @@ class Requests {
 	}
 	
 	deleteProduct(id, titleId, short_descriptionId, descriptionId, callback) {
+		var t = this;
+		
 		// delete loc_keys
 		this.dbHandler.query(`DELETE FROM loc_keys WHERE
 			loc_id = "${titleId}" OR
 			loc_id = "${short_descriptionId}" OR
 			loc_id = "${descriptionId}"`, function() {
-		});
-		
-		// delete product
-		this.dbHandler.query(`DELETE FROM products WHERE id = ${id}`, function() {
-			callback({
-				msg: messages.DELETE_PRODUCT_SUCCESS,
-				payload: {}
+			// delete product
+			t.dbHandler.query(`DELETE FROM products WHERE id = ${id}`, function() {
+				t.dbHandler.query(`DELETE i FROM images as i WHERE NOT EXISTS (SELECT * FROM products_img as p WHERE p.img = i.img_id)`, function() {
+					callback({
+						msg: messages.DELETE_PRODUCT_SUCCESS,
+						payload: {}
+					});
+				});
+			
 			});
 		});
 	}
 	
 	updateProduct(id, img, title, short_description, description, category, price, loc, callback) {
+		var t = this;
+		
 		if(img.del) {
 			img.del.forEach(item => {
-				this.dbHandler.query(`DELETE FROM images WHERE product_id = ${id} AND img = "${item}"`, function() {
+				this.dbHandler.query(`DELETE FROM products_img WHERE product_id = ${id} AND img = (SELECT img_id from images WHERE img = "${item}")`, function() {
+					t.dbHandler.query(`DELETE i FROM images as i WHERE NOT EXISTS (SELECT * FROM products_img as p WHERE p.img = i.img_id)`, function() {
+					});
 				});
 			});
 		}
 		
 		if(img.add) {
 			img.add.forEach(item => {
-				this.dbHandler.query(`INSERT INTO images (product_id, img, default_img) VALUES (${id}, "${item[0]}", ${item[1]})`, function() {
+				this.dbHandler.query(`INSERT IGNORE INTO images (img) VALUES ("${item[0]}")`, function() {
+					t.dbHandler.query(`INSERT INTO products_img (product_id, img, default_img) VALUES (${id}, (SELECT img_id FROM images WHERE img = "${item[0]}"), ${item[1]})`, function() {
+					});
 				});
 			});
 		}
 		
 		if(img.changed) {
 			img.changed.forEach(item => {
-				this.dbHandler.query(`UPDATE images SET default_img = ${item[1]} WHERE img = "${item[0]}"`, function() {
+				this.dbHandler.query(`UPDATE products_img SET default_img = ${item[1]} WHERE img = (SELECT img_id from images WHERE img = "${item[0]}")`, function() {
 				});
 			});
 		}
@@ -480,28 +497,45 @@ class Requests {
 	
 	addNewProduct(img, title, short_description, description, category, price, callback) {
 		var t = this;
+		var promises = [];
 		
-		this.dbHandler.query(`INSERT INTO products (category, price) VALUES ((SELECT id FROM categories WHERE loc_id = "${category}"), ${price})`, function(result) {
-			var newProductId = result.insertId;
+		// Adds img in database
+		img.forEach(item => {
+			promises.push(new Promise(resolve => {
+				t.dbHandler.query(`INSERT IGNORE INTO images (img) VALUES ("${item[0]}")`, function(result) {
+					resolve(result);
+				})
+			}));
+		});
+		
+		Promise.all(promises).then(() => {
+			// Adds product
+			t.dbHandler.query(`INSERT INTO products (category, price) VALUES ((SELECT id FROM categories WHERE loc_id = "${category}"), ${price})`, function(result) {
+				var newProductId = result.insertId;
 			
-			// Adds locale values
-			t.dbHandler.query(`INSERT INTO loc_keys (loc_id) VALUES ("product_title_##${newProductId}"), ("product_sdesc_##${newProductId}"), ("product_desc_##${newProductId}")`, function(result) {
-				t.dbHandler.query(`INSERT INTO locale (loc, name, loc_id) SELECT DISTINCT loc, "${title}" AS name, "product_title_##${newProductId}" AS loc_id FROM locale`, function(result) {
-					t.dbHandler.query(`INSERT INTO locale (loc, name, loc_id) SELECT DISTINCT loc, "${short_description}" AS name, "product_sdesc_##${newProductId}" AS loc_id FROM locale`, function(result) {
-						t.dbHandler.query(`INSERT INTO locale (loc, name, loc_id) SELECT DISTINCT loc, "${description}" AS name, "product_desc_##${newProductId}" AS loc_id FROM locale`, function(result) {
-							// Updates loc_id values
-							t.dbHandler.query(`UPDATE products SET title = "product_title_##${newProductId}", short_description = "product_sdesc_##${newProductId}", description = "product_desc_##${newProductId}" WHERE id = ${newProductId}`, function(result) {
-								var counter = 0;
-								img.forEach(item => {
-									t.dbHandler.query(`INSERT IGNORE INTO images (product_id, img, default_img) VALUES (${newProductId}, "${item[0]}", ${item[1]})`, function(result) {
-										counter++;
-						
-										if(counter == img.length) {
-											callback({
-												msg: messages.ADD_NEW_PRODUCT_REQUEST,
-												payload: {}
+				// Adds locale values
+				t.dbHandler.query(`INSERT INTO loc_keys (loc_id) VALUES ("product_title_##${newProductId}"), ("product_sdesc_##${newProductId}"), ("product_desc_##${newProductId}")`, function(result) {
+					t.dbHandler.query(`INSERT INTO locale (loc, name, loc_id) SELECT DISTINCT loc, "${title}" AS name, "product_title_##${newProductId}" AS loc_id FROM locale`, function(result) {
+						t.dbHandler.query(`INSERT INTO locale (loc, name, loc_id) SELECT DISTINCT loc, "${short_description}" AS name, "product_sdesc_##${newProductId}" AS loc_id FROM locale`, function(result) {
+							t.dbHandler.query(`INSERT INTO locale (loc, name, loc_id) SELECT DISTINCT loc, "${description}" AS name, "product_desc_##${newProductId}" AS loc_id FROM locale`, function(result) {
+								// Updates loc_id values
+								t.dbHandler.query(`UPDATE products SET title = "product_title_##${newProductId}", short_description = "product_sdesc_##${newProductId}", description = "product_desc_##${newProductId}" WHERE id = ${newProductId}`, function(result) {
+									// Adds product img's
+									promises = [];
+									
+									img.forEach(item => {
+										promises.push(new Promise(resolve => {
+											t.dbHandler.query(`INSERT INTO products_img (product_id, img, default_img) VALUES (${newProductId}, (SELECT img_id FROM images WHERE img = "${item[0]}"), ${item[1]})`, function(result) {
+												resolve(result);
 											});
-										}
+										}));
+									});
+									
+									Promise.all(promises).then(() => {
+										callback({
+											msg: messages.ADD_NEW_PRODUCT_SUCCESS,
+											payload: {}
+										});
 									});
 								});
 							});

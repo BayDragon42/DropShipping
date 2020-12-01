@@ -161,10 +161,6 @@ function fillLocaleValues(locale) {
 	$("#ConfigLocale").children("span").html(locale["MMenuConfigLocFiles_core"]);
 	$("#Infos").children("span").html(locale["FooterInfos_core"]);
 	$("#QuickLinks").children("span").html(locale["FooterQuickLinks_core"]);
-
-	$("#newLocFile").attr("placeholder", locale["MNewLocFile_core"]);
-	$('[name="add"]').html(locale["MAdd_core"]);
-	$('[name="update"]').html(locale["MUpdateKeyVal_core"]);
 }
 
 function initSubMenus() {

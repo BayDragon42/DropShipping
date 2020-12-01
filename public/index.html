@@ -11,42 +11,47 @@
 			</div>
 			<script>
 				function makeMenu(menuData, isSubMenu, level) {
-					menuData = JSON.parse(menuData.split('&#34;').join('"'));
+					if(!isSubMenu) {
+						menuData = JSON.parse(menuData.split('&#34;').join('"'));
+					
+						console.log(menuData);
+					}
 					
 					var ul = document.createElement("ul");
 					$(ul).attr("level", level);
 					if(isSubMenu) {
 						ul.classList.add("subMenu");
 					}
-					for(var i=0; i < menuData.length; i++) {
-						
+					
+					menuData.forEach(item => {
+						var link;
 						var li = document.createElement("li");
 						
-						if(menuData[i].value != null) {
-							if(menuData[i].subMenu.length != 0) {
+						if(item.value != null) {
+							if(item.subMenu.length != 0) {
 								li.classList.add("toggleSubMenu");
 							}
-						
-							var link = document.createElement("a");
+							
+							link = document.createElement("a");
 							link.classList.add("toggleMenu");
-							if(menuData[i].href != null) {
-								link.href = menuData[i].href;
+							if(item.href != null) {
+								link.href = item.href;
 							}
 						
 							var span = document.createElement("span");
-							span.innerHTML = menuData[i].value;
-						
+							span.innerHTML = item.value;
+							
 							link.appendChild(span);
-							if(menuData[i].subMenu.length != 0) {
-								link.appendChild(makeMenu(JSON.stringify(menuData[i].subMenu), true, ++level));
+							if(item.subMenu.length != 0) {
+								link.appendChild(makeMenu(item.subMenu, true, ++level));
 							}
+						
+							li.appendChild(link);
 						} else {
 							li.classList.add("sep");
 						}
-						
-						li.appendChild(link);
 						ul.appendChild(li);
-					}
+					});
 					
 					return ul;
 				}
