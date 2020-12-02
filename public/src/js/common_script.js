@@ -1,6 +1,6 @@
 import messages from "./messages.js"
 
-function keepAlive(token) {	
+function keepAlive(token) {
 	return new Promise((resolve, reject) => {
 		sendRequest(messages.SESSION_KEEP_ALIVE_REQUEST, token)
 		.then(response => {
@@ -20,7 +20,6 @@ function sendRequest(msg, payload) {
 		})
 	})
 	.then(response => {
-		console.log(JSON.parse(response));
 		return JSON.parse(response);
 	});
 }
@@ -383,19 +382,11 @@ function setCookie(name, value, expire) {
 }
 
 function getCookie(name) {
-	var res;
 	var cookies = document.cookie.split(";");
 
-	cookies.every(item => {
-		var pair = item.split("=");
+	var res = cookies.filter(c => c.trim().split("=")[0] == name)[0] || "";
 	
-		if(pair[0] == name) {
-			res = pair[1];
-			return false;
-		}
-	});
-	
-	return res;
+	return res.split("=")[1];
 }
 
 export default {

@@ -86,13 +86,14 @@ server.get("/cart", (req, res) => {
 
 server.get("/manage", (req, res) => {
 	var token = req.cookies["mx-access-token"];
-	console.log(req.cookies);
+	console.log(`VERIF TOKEN = ${token}`);
 	if(token != undefined) {
 		requestHandler.parseRequest(messages.VERIFY_CREDENTIALS_REQUEST, {
 			token: token,
 			s: 0
 		}, function(result) {
 			if(result === messages.VERIFY_CREDENTIALS_SUCCESS) {
+				console.log(`VERIFY CREDENTIAL SUCCEEDED`);
 				// If access via inner link
 				if(req.headers.xpjax) {
 					res.end();
@@ -102,6 +103,7 @@ server.get("/manage", (req, res) => {
 					});
 				}
 			} else {
+				console.log(`VERIFY CREDENTIAL FAILED`);
 				res.set({
 					"Set-Cookie": `mx-access-token=${token}; expires=${new Date(moment()).toUTCString()};`
 				});
@@ -128,24 +130,40 @@ server.post("/req", (req, res) => {
 		// TODO
 		switch(result.msg) {
 			case messages.SESSION_KEEP_ALIVE_SUCCESS:
-				if(req.body.payload.token.mx) {
+				if(req.body.payload.s == 0) {
 					res.set({
-						"Set-Cookie": `mx-access-token=${result.payload.token}; expires=${new Date(moment().add(1, "minutes")).toUTCString()};`
+						"Set-Cookie": `mx-access-token=${result.payload.token}; expires=${new Date(result.payload.expires).toUTCString()};`
 					});
 				} else {
 					res.set({
-						"Set-Cookie": `cx-access-token=${result.payload.token}; expires=${new Date(moment().add(1, "minutes")).toUTCString()};`
+						"Set-Cookie": `cx-access-token=${result.payload.token}; expires=${new Date(result.payload.expires).toUTCString()};`
+					});
+				}
+				break;
+			case messages.SESSION_KEEP_ALIVE_ERROR:
+				if(req.body.payload.s == 0) {
+					res.set({
+						"Set-Cookie": `mx-access-token=""; expires=${new Date(moment()).toUTCString()};`
+					});
+				} else {
+					res.set({
+						"Set-Cookie": `cx-access-token=""; expires=${new Date(moment()).toUTCString()};`
 					});
 				}
 				break;
 			case messages.PARTNER_LOGIN_SUCCESS:
 				res.set({
-					"Set-Cookie": `mx-access-token=${result.payload.token}; expires=${new Date(moment().add(1, "minutes")).toUTCString()};`
+					"Set-Cookie": `mx-access-token=${result.payload.token}; expires=${new Date(result.payload.expires).toUTCString()};`
 				});
 				break;
 			case messages.LOGIN_SUCCESS:
 				res.set({
-					"Set-Cookie": `cx-access-token=${result.payload.token}; expires=${new Date(moment().add(1, "minutes")).toUTCString()};`
+					"Set-Cookie": `cx-access-token=${result.payload.token}; expires=${new Date(result.payload.expires).toUTCString()};`
+				});
+				break;
+			case messages.LOGOUT_SUCCESS:
+				res.set({
+					"Set-Cookie": `cx-access-token=""; expires=${new Date(moment()).toUTCString()};`
 				});
 				break;
 		}

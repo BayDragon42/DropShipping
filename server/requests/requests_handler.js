@@ -108,19 +108,20 @@ class Requests {
 		this.dbHandler.query(`SELECT g.id, a.password FROM admin a LEFT JOIN groups g ON a.group_id = g.id WHERE a.user_id = "${user_id}"`, function(result) {
 			if(result.length != 0) {
 				if(pass === result[0].password) {
-					var expires = moment().add(10, "minutes").valueOf();
+					var expires = moment().add(1, "minutes");
 					
 					var hash = crypto.createHmac("sha512", user_id);
-					hash.update(`${expires}`);
+					hash.update(`${expires.valueOf()}`);
 					var token = hash.digest("hex");
 					
-					t.usersHandler.addUser(token, user_id, expires, 0);
+					t.usersHandler.addUser(token, user_id, expires.valueOf(), 0);
 					
 					t.logHandler.log("User '" + user_id + "' logged in.");
 					callback({
 						msg: messages.PARTNER_LOGIN_SUCCESS,
 						payload: {
-							token: token
+							token: token,
+							expires: expires
 						}
 					});
 				} else {
@@ -145,23 +146,23 @@ class Requests {
 
 	authentificateUser(user_id, pass, callback) {
 		var t = this;
-		console.log(`user: ${user_id}, pass: ${pass}`);
 		this.dbHandler.query(`SELECT * FROM users WHERE user_id = "${user_id}"`, function(result) {
 			if(result.length != 0) {
 				if(pass === result[0].password) {
-					var expires = moment().add(10, "minutes").valueOf();
+					var expires = moment().add(1, "minutes");
 					
 					var hash = crypto.createHmac("sha512", user_id);
-					hash.update(`${expires}`);
+					hash.update(`${expires.valueOf()}`);
 					var token = hash.digest("hex");
 					
-					t.usersHandler.addUser(token, user_id, expires, 1);
+					t.usersHandler.addUser(token, user_id, expires.valueOf(), 1);
 					
 					t.logHandler.log("User '" + user_id + "' logged in.");
 					callback({
 						msg: messages.LOGIN_SUCCESS,
 						payload: {
-							token: token
+							token: token,
+							expires: expires
 						}
 					});
 				} else {
@@ -185,6 +186,7 @@ class Requests {
 	}
 
 	verifyCredentials(token, s, callback) {
+		console.log(`verifyCred : ${token}`);
 		if(token) {
 			var user = this.usersHandler.findUser(token, s);
 			if(user != undefined) {
@@ -213,18 +215,19 @@ class Requests {
 	}
 	
 	keepAlive(token, s, callback) {
-		console.log(`keepAlive token : ${token}`);
+		console.log(`keepAlive : ${token}`);
 		var user = this.usersHandler.findUser(token, s);
 		if(user != undefined) {
 			this.logHandler.log(`${user.user_id} : keep alive`);
-			var expires = moment().add(1, "minutes").valueOf();
+			var expires = moment().add(1, "minutes");
 			
-			user.setExpire(expires);
+			user.setExpire(expires.valueOf());
 			
 			callback({
 				msg: messages.SESSION_KEEP_ALIVE_SUCCESS,
 				payload: {
-					token: token
+					token: token,
+					expires: expires
 				}
 			});
 		} else {

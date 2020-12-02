@@ -18,7 +18,6 @@ function getScript(locale, callback) {
 				pageConfig(locale["MMenuProducts_core"], 1);
 				
 				// TODO: Enhance the search value spliting (more security control)
-				console.log(window.location.search.split("=")[1]);
 			
 				common.sendRequest(messages.GET_PRODUCT_DATA_REQUEST, {
 					filter: "",
@@ -32,18 +31,18 @@ function getScript(locale, callback) {
 					
 						pageConfig(decodeURIComponent(product.title), 1);
 						var productInfo_node = document.createElement("div");
-						productInfo_node.classList.add("element");
+						productInfo_node.setAttribute("class", "row xmargin list");
 					
 						// Title
 						var row_node = document.createElement("div");
-						row_node.classList.add("crow");
+						row_node.setAttribute("class", "row sa xmargin");
 						row_node.innerHTML = decodeURIComponent(product.title);
 					
 						productInfo_node.appendChild(row_node);
 					
 						// Images and PInfo
 						var row_node = document.createElement("div");
-						row_node.classList.add("crow");
+						row_node.setAttribute("class", "row sa xmargin");
 					
 						var imgContainer_node = document.createElement("div");
 						imgContainer_node.classList.add("viewer");
@@ -266,7 +265,7 @@ function getScript(locale, callback) {
 					
 						// Description
 						var row_node = document.createElement("div");
-						row_node.classList.add("crow");
+						row_node.setAttribute("class", "row sa xmargin");
 						row_node.innerHTML = decodeURIComponent(product.description);
 					
 						productInfo_node.appendChild(row_node);
@@ -490,132 +489,262 @@ function getScript(locale, callback) {
 				
 				var total = 0;
 				let counter = 0;
-				for (const [key, value] of Object.entries(cart)) {
-					common.sendRequest(messages.GET_PRODUCTS_SHORT_DATA_REQUEST, {
-						filter: "",
-						id: key,
-						loc: localStorage.getItem("locale")
-					})
-					.then(response => {
-						if(response.msg === messages.GET_PRODUCTS_SHORT_DATA_SUCCESS) {
-							var product = response.payload.products[0];
+				if(Object.entries(cart).length != 0) {
+					for (const [key, value] of Object.entries(cart)) {
+						common.sendRequest(messages.GET_PRODUCTS_SHORT_DATA_REQUEST, {
+							filter: "",
+							id: key,
+							loc: localStorage.getItem("locale")
+						})
+						.then(response => {
+							if(response.msg === messages.GET_PRODUCTS_SHORT_DATA_SUCCESS) {
+								var product = response.payload.products[0];
 							
-							var productLink = document.createElement("a");
-							productLink.setAttribute("data-id", product.id);
-							productLink.href = "./products?p=" + product.id;
+								var productLink = document.createElement("a");
+								productLink.setAttribute("data-id", product.id);
+								productLink.href = "./products?p=" + product.id;
 							
-							var productImg = document.createElement("img");
-							if(v.img == null) {
-								productImg.src = "src/img/default.jpeg";
-							} else {
-								productImg.src = product.img;
-							}
-							productLink.appendChild(productImg);
+								var productImg = document.createElement("img");
+								if(product.img == null) {
+									productImg.src = "src/img/default.jpeg";
+								} else {
+									productImg.src = product.img;
+								}
+								productLink.appendChild(productImg);
 							
-							var productInfo = document.createElement("p");
-							productInfo.setAttribute("class", "textOverflow");
-							productInfo.innerHTML = decodeURIComponent(product.title);
-							productLink.appendChild(productInfo);
+								var productInfo = document.createElement("p");
+								productInfo.setAttribute("class", "textOverflow");
+								productInfo.innerHTML = decodeURIComponent(product.title);
+								productLink.appendChild(productInfo);
 							
-							var productInfo = document.createElement("p");
-							productInfo.setAttribute("class", "textOverflow");
-							productInfo.setAttribute("quantity", "");
-							productInfo.innerHTML = "Quantité : " + value;
-							productLink.appendChild(productInfo);
+								var productInfo = document.createElement("p");
+								productInfo.setAttribute("class", "textOverflow");
+								productInfo.setAttribute("quantity", "");
+								productInfo.innerHTML = "Quantité : " + value;
+								productLink.appendChild(productInfo);
 							
-							var productInfo = document.createElement("p");
-							productInfo.setAttribute("class", "textOverflow");
-							productInfo.innerHTML = "Prix unit. " + product.price;
-							productLink.appendChild(productInfo);
+								var productInfo = document.createElement("p");
+								productInfo.setAttribute("class", "textOverflow");
+								productInfo.innerHTML = "Prix unit. " + product.price;
+								productLink.appendChild(productInfo);
 							
-							var productInfo = document.createElement("p");
-							productInfo.setAttribute("class", "textOverflow");
-							productInfo.innerHTML = "Tot. " + product.price * value;
-							productLink.appendChild(productInfo);
+								var productInfo = document.createElement("p");
+								productInfo.setAttribute("class", "textOverflow");
+								productInfo.innerHTML = "Tot. " + product.price * value;
+								productLink.appendChild(productInfo);
 							
-							total += product.price * value;
-							console.log(total);
+								total += product.price * value;
 							
-							var productRemove = document.createElement("template-remove");
-							productRemove.setAttribute("class", "remove");
-							productRemove.addEventListener("click", function(e) {
-								e.stopPropagation();
-								var cart = JSON.parse(localStorage.getItem("cart"));
-								delete cart[$(this).parent("a").attr("data-id")];
-								
-								localStorage.setItem("cart", JSON.stringify(cart));
-								updateCartSticker(cart);
-								
-								$(this).parent("a").animate({
-									height: 0,
-									opacity: 0
-								}, 250, function() {
-									$(this).remove();
+								var productRemove = document.createElement("template-remove");
+								productRemove.setAttribute("class", "remove");
+								$(productRemove).attr({
+									"weight": 0.0625,
+									"size": 1.25,
+									"color": "#333",
+									"margin": 0.125
 								});
-							});
-							productRemove.addEventListener("touchend", function(e) {
-								e.stopPropagation();
-								e.preventDefault();
-							});
-							productLink.appendChild(productRemove);
-							
-							cartContentNode.appendChild(productLink);
-					
-							counter++;
-							if(counter == Object.keys(cart).length) {
-								var summaryContainerNode = document.createElement("div");
-								summaryContainerNode.setAttribute("class", "element");
-				
-								var row = document.createElement("div");
-								row.setAttribute("class", "row");
-								var span = document.createElement("span");
-								span.innerHTML = "Total:";
-								row.appendChild(span);
-								var span = document.createElement("span");
-								span.innerHTML = total;
-								row.appendChild(span);
-								summaryContainerNode.appendChild(row);
-				
-								var row = document.createElement("div");
-								row.setAttribute("class", "row");
-								var span = document.createElement("span");
-								span.innerHTML = "Total Frais:";
-								row.appendChild(span);
-								var span = document.createElement("span");
-								span.innerHTML = 0;
-								row.appendChild(span);
-								summaryContainerNode.appendChild(row);
-				
-								var row = document.createElement("div");
-								row.setAttribute("class", "row");
-								var button = document.createElement("a");
-								button.classList.add("button");
-								button.href = "/";
-								button.innerHTML = "Retour";
-								row.appendChild(button);
-								var button = document.createElement("a");
-								button.classList.add("button");
-								button.href = "/cart?step=2";
-								button.innerHTML = "Suivant";
-								row.appendChild(button);
-								summaryContainerNode.appendChild(row);
-				
-								$("#content").append(summaryContainerNode);
+								productRemove.addEventListener("click", function(e) {
+									e.stopPropagation();
+									var cart = JSON.parse(localStorage.getItem("cart"));
+									delete cart[$(this).parent("a").attr("data-id")];
 								
-								callback();
+									localStorage.setItem("cart", JSON.stringify(cart));
+									updateCartSticker(cart);
+								
+									$(this).parent("a").animate({
+										height: 0,
+										opacity: 0
+									}, 250, function() {
+										$(this).remove();
+									});
+								});
+								productRemove.addEventListener("touchend", function(e) {
+									e.stopPropagation();
+									e.preventDefault();
+								});
+								productLink.appendChild(productRemove);
+							
+								cartContentNode.appendChild(productLink);
+					
+								counter++;
+								if(counter == Object.keys(cart).length) {
+									var summaryContainerNode = document.createElement("div");
+									summaryContainerNode.setAttribute("class", "row xmargin list");
+				
+									var row = document.createElement("div");
+									row.setAttribute("class", "row sb xmargin");
+									var span = document.createElement("span");
+									span.innerHTML = "Total:";
+									row.appendChild(span);
+									var span = document.createElement("span");
+									span.innerHTML = total;
+									row.appendChild(span);
+									summaryContainerNode.appendChild(row);
+				
+									var row = document.createElement("div");
+									row.setAttribute("class", "row sb xmargin");
+									var span = document.createElement("span");
+									span.innerHTML = "Total Frais:";
+									row.appendChild(span);
+									var span = document.createElement("span");
+									span.innerHTML = 0;
+									row.appendChild(span);
+									summaryContainerNode.appendChild(row);
+				
+									var row = document.createElement("div");
+									row.setAttribute("class", "row sb xmargin");
+									var button = document.createElement("a");
+									button.classList.add("button");
+									button.href = "/";
+									button.innerHTML = "Retour";
+									row.appendChild(button);
+									var button = document.createElement("a");
+									button.classList.add("button");
+									button.href = "/cart?step=2";
+									button.innerHTML = "Suivant";
+									row.appendChild(button);
+									summaryContainerNode.appendChild(row);
+				
+									$("#content").append(summaryContainerNode);
+								
+									callback();
+								}
 							}
-						}
-					});
+						});
+					}
+				} else {
+					callback();
 				}
 				break;
 			
 			// CASE OF CART STEP 2 (ADDRESSES)
 			case /\/cart\?step=2/.test(path):
 				pageConfig("TBD", 1);
+				
+				var initAddressForm = function(t, addr) {
+					var addressesContainer = document.createElement("div");
+					$(addressesContainer).attr("class", "col xmargin");
+					
+					if(addr !== undefined) {
+						var addrListHeader = document.createElement("div");
+						$(addrListHeader).attr("class", "align-left");
+					
+						var productRemove = document.createElement("template-remove");
+						productRemove.setAttribute("class", "remove");
+						productRemove.addEventListener("click", function() {
+							//$(this).parents("[class='element vCardContainer']").fadeOut(100);
+						});
+						addrListHeader.appendChild(productRemove);
+					
+						var productRemove = document.createElement("template-remove");
+						productRemove.setAttribute("class", "remove");
+						$(productRemove).attr({
+							"weight": 0.0625,
+							"size": 1.25,
+							"color": "#333",
+							"margin": 0.125
+						});
+						productRemove.addEventListener("click", function() {
+							$(this).parents("[class='element vCardContainer']").fadeOut(100);
+						});
+						addrListHeader.appendChild(productRemove);
+						
+						addressesContainer.appendChild(addrListHeader);
+					}
+					
+					var input = document.createElement("input");
+					input.placeholder = "nom";
+					input.value = (addr != null) ? addr.name : "" || "";
+					input.name = "name";
+					addressesContainer.append(input);
+					
+					var input = document.createElement("input");
+					input.placeholder = "prenom";
+					input.name = "surname";
+					addressesContainer.append(input);
+					
+					var input = document.createElement("input");
+					input.placeholder = "addresse";
+					input.name = "address";
+					addressesContainer.append(input);
+					
+					var input = document.createElement("input");
+					input.placeholder = "npa";
+					input.name = "npa";
+					addressesContainer.append(input);
+					
+					var input = document.createElement("input");
+					input.placeholder = "ville";
+					input.name = "town";
+					addressesContainer.append(input);
+					
+					var input = document.createElement("input");
+					input.placeholder = "pays";
+					input.name = "country";
+					addressesContainer.append(input);
+					
+					var input = document.createElement("input");
+					input.placeholder = "tel.";
+					input.name = "phone";
+					addressesContainer.append(input);
+					
+					var compInfo;
+					// Info complement
+					var moreInfo = document.createElement("a");
+					moreInfo.innerHTML = "plus d'infos";
+					moreInfo.addEventListener("click", function() {
+						$(compInfo).slideToggle(100);
+					});
+					addressesContainer.append(moreInfo);
+					
+					compInfo = document.createElement("div");
+					$(compInfo).attr("class", "col xmargin");
+					$(compInfo).hide();
+					
+					var input = document.createElement("input");
+					input.placeholder = "societe";
+					input.name = "society";
+					compInfo.append(input);
+					
+					var input = document.createElement("input");
+					input.placeholder = "etage";
+					input.name = "floor";
+					compInfo.append(input);
+					
+					var input = document.createElement("input");
+					input.placeholder = "bat.";
+					input.name = "batiment";
+					compInfo.append(input);
+					
+					var input = document.createElement("input");
+					input.placeholder = "interphone";
+					input.name = "interphone";
+					compInfo.append(input);
+					
+					var input = document.createElement("input");
+					input.placeholder = "code porte";
+					input.name = "doorCode1";
+					compInfo.append(input);
+					
+					var input = document.createElement("input");
+					input.placeholder = "code porte 2";
+					input.name = "doorCode2";
+					compInfo.append(input);
+					
+					var input = document.createElement("input");
+					input.placeholder = "instructions";
+					input.name = "instruction";
+					compInfo.append(input);
+					
+					addressesContainer.appendChild(compInfo);
+					
+					t.append(addressesContainer);
+				}
+				
 				if(common.getCookie("cx-access-token")) {
 					var addressList = document.createElement("div");
 					addressList.id = "addrList";
-					$(addressList).attr("class", "element vCardContainer");
+					$(addressList).attr("class", "row xmargin list vCardContainer");
 					
 					$("#content").append(addressList);
 		
@@ -629,40 +758,7 @@ function getScript(locale, callback) {
 						if(response.msg === messages.GET_LAST_USED_ADDRESS_SUCCESS) {
 							var address = response.payload;
 							
-							var element = document.createElement("div");
-							element.classList.add("element");
-							
-							var span = document.createElement("span");
-							span.classList.add("title");
-							$(span).attr("name", "userName");
-							span.innerHTML = `${address.surname} ${address.name}`;
-							element.appendChild(span);
-							
-							var span = document.createElement("span");
-							$(span).attr("name", "addr");
-							span.innerHTML = address.address;
-							element.appendChild(span);
-							
-							var span = document.createElement("span");
-							$(span).attr("name", "npa");
-							span.innerHTML = `${address.npa} ${address.town}`;
-							element.appendChild(span);
-							
-							var span = document.createElement("span");
-							$(span).attr("name", "country");
-							span.innerHTML = address.country;
-							element.appendChild(span);
-							
-							var span = document.createElement("span");
-							$(span).attr("name", "phone");
-							span.innerHTML = address.phone;
-							element.appendChild(span);
-							
-							var addressSelect = document.createElement("a");
-							addressSelect.classList.add("button");
-							addressSelect.innerHTML = "m";
-							addressSelect.addEventListener("click", function() {
-								
+							var getUserAddresses = function() {
 								common.sendRequest(messages.GET_USER_ADDRESSES_REQUEST, {
 									token: common.getCookie("cx-access-token")
 								})
@@ -670,21 +766,30 @@ function getScript(locale, callback) {
 									if(response.msg === messages.GET_USER_ADDRESSES_SUCCESS) {
 										var addresses = response.payload.addresses;
 										
-										$("#addrList").empty();
+										$(addressList).empty();
+										
+										var addressesContainer = document.createElement("div");
+										$(addressesContainer).attr("class", "row xmargin list");
 										
 										var addrListHeader = document.createElement("div");
 										$(addrListHeader).attr("class", "align-right");
-							
+										
 										var productRemove = document.createElement("template-remove");
 										productRemove.setAttribute("class", "remove");
+										$(productRemove).attr({
+											"weight": 0.0625,
+											"size": 1.25,
+											"color": "#333",
+											"margin": 0.125
+										});
 										productRemove.addEventListener("click", function() {
 											$(this).parents("[class='element vCardContainer']").fadeOut(100);
 										});
 										addrListHeader.appendChild(productRemove);
-										addressList.appendChild(addrListHeader);
-							
+										addressesContainer.appendChild(addrListHeader);
+										
 										var cardContainer = document.createElement("div");
-										$(cardContainer).attr("class", "element");
+										$(cardContainer).attr("class", "row xmargin list");
 							
 										addresses.forEach(item => {
 											var visitCard = document.createElement("div");
@@ -728,32 +833,77 @@ function getScript(locale, callback) {
 											visitCard.appendChild(sep);
 											
 											var addrModify = document.createElement("a");
+											var newAddress;
 											addrModify.addEventListener("click", function() {
-												// Adds new address
+												// Modifies address
+												$(addressList).empty();
+												initAddressForm($(addressList), item);
 											});
-											//addrModify.classList.add("button");
 											addrModify.innerHTML = "modify addr";
 											visitCard.appendChild(addrModify);
 											
 											cardContainer.appendChild(visitCard);
 										});
 										
-										addressList.appendChild(cardContainer);
+										addressesContainer.appendChild(cardContainer);
 										
 										var addrListFooter = document.createElement("a");
+										addrListFooter.addEventListener("click", function() {
+											// Adds new address
+											$(addressList).empty();
+											initAddressForm($(addressList), null);
+										});
 										addrListFooter.classList.add("button");
 										addrListFooter.innerHTML = "a";
 										
-										addressList.appendChild(addrListFooter);
+										addressesContainer.appendChild(addrListFooter);
+										
+										addressList.appendChild(addressesContainer);
 										
 										$(addressList).fadeIn(100);
 									}
 								});
+							}
+							
+							var element = document.createElement("div");
+							element.setAttribute("class", "row xmargin list");
+							
+							var span = document.createElement("span");
+							span.classList.add("title");
+							$(span).attr("name", "userName");
+							span.innerHTML = `${address.surname} ${address.name}`;
+							element.appendChild(span);
+							
+							var span = document.createElement("span");
+							$(span).attr("name", "addr");
+							span.innerHTML = address.address;
+							element.appendChild(span);
+							
+							var span = document.createElement("span");
+							$(span).attr("name", "npa");
+							span.innerHTML = `${address.npa} ${address.town}`;
+							element.appendChild(span);
+							
+							var span = document.createElement("span");
+							$(span).attr("name", "country");
+							span.innerHTML = address.country;
+							element.appendChild(span);
+							
+							var span = document.createElement("span");
+							$(span).attr("name", "phone");
+							span.innerHTML = address.phone;
+							element.appendChild(span);
+							
+							var addressSelect = document.createElement("a");
+							addressSelect.classList.add("button");
+							addressSelect.innerHTML = "m";
+							addressSelect.addEventListener("click", function() {
+								getUserAddresses();
 							});
 							element.appendChild(addressSelect);
 							
 							var row = document.createElement("div");
-							row.setAttribute("class", "row");
+							row.setAttribute("class", "row sb xmargin");
 							var button = document.createElement("a");
 							button.classList.add("button");
 							button.href = "/cart?step=1";
@@ -775,6 +925,8 @@ function getScript(locale, callback) {
 					});
 				} else {
 					// Creates an address form
+					initAddressForm($("#content"));
+					
 					callback();
 				}
 				break;
@@ -802,10 +954,10 @@ function getScript(locale, callback) {
 			
 				// Product filter
 				var element = document.createElement("div");
-				element.setAttribute("class", "element");
+				element.setAttribute("class", "row xmargin list");
 			
 				var row = document.createElement("div");
-				row.setAttribute("class", "row");
+				row.setAttribute("class", "row sb xmargin");
 				var input = document.createElement("input");
 				input.id = "filterProducts";
 				input.placeholder = "filtre produits (à faire)";
@@ -848,7 +1000,6 @@ function getScript(locale, callback) {
 							$("#newProduct").slideDown("normal");
 						});
 					} else {
-						console.log($("#title").val());
 						if($("#title").val() !== "") {
 							var img = [];
 							$(".custom-img-select").children("div").children("img:first-child").each((k, v) => {
@@ -858,7 +1009,6 @@ function getScript(locale, callback) {
 									img.push([v.src, 0]);
 								}
 							});
-							console.log(img);
 				
 							common.sendRequest(messages.ADD_NEW_PRODUCT_REQUEST, {
 								img: img,
@@ -893,7 +1043,7 @@ function getScript(locale, callback) {
 				// Adding new product
 				var element = document.createElement("div");
 				element.id = "newProduct";
-				element.setAttribute("class", "element");
+				element.setAttribute("class", "row xmargin list");
 			
 				var row = document.createElement("div");
 				var span = document.createElement("span");
@@ -969,7 +1119,7 @@ function getScript(locale, callback) {
 				$(element).hide();
 			
 				var element = document.createElement("div");
-				element.setAttribute("class", "element");
+				element.setAttribute("class", "row xmargin list");
 				element.id = "productList";
 			
 				$("#content").append(element);
@@ -1006,10 +1156,10 @@ function getScript(locale, callback) {
 				pageConfig(`${locale["documentTitleManage_core"]} - ${locale["MMenuConfigLocFiles_core"]}`, 0);
 			
 				var element = document.createElement("div");
-				element.setAttribute("class", "element");
+				element.setAttribute("class", "row xmargin list");
 			
 				var row = document.createElement("div");
-				row.setAttribute("class", "row");
+				row.setAttribute("class", "row sb xmargin");
 				var selectContainer = document.createElement("div");
 				selectContainer.setAttribute("class", "custom-select");
 				var select = document.createElement("select");
@@ -1037,7 +1187,7 @@ function getScript(locale, callback) {
 				$("#content").append(element);
 			
 				var element = document.createElement("div");
-				element.setAttribute("class", "element");
+				element.setAttribute("class", "row xmargin list");
 				element.id = "keyList";
 			
 				$("#content").append(element);
@@ -1082,10 +1232,10 @@ function getScript(locale, callback) {
 				pageConfig(`${locale["documentTitleManage_core"]} - ${locale["MMenuProductsCat_core"]}`, 0);
 			
 				var element = document.createElement("div");
-				element.setAttribute("class", "element");
+				element.setAttribute("class", "row xmargin list");
 			
 				var row = document.createElement("div");
-				row.setAttribute("class", "row");
+				row.setAttribute("class", "row sb xmargin");
 				var selectContainer = document.createElement("div");
 				selectContainer.setAttribute("class", "custom-select cat");
 				var select = document.createElement("select");
@@ -1109,7 +1259,7 @@ function getScript(locale, callback) {
 				$("#content").append(element);
 			
 				var element = document.createElement("div");
-				element.setAttribute("class", "element");
+				element.setAttribute("class", "row xmargin list");
 				element.id = "catList";
 			
 				$("#content").append(element);
@@ -1199,8 +1349,8 @@ function getScript(locale, callback) {
 						pass: password
 					})
 					.then(response => {		
-						if(response.msg === messages.PARTNER_LOGIN_SUCCESS) {		
-							window.location.href = "/manage?page=stats";
+						if(response.msg === messages.PARTNER_LOGIN_SUCCESS) {
+							location.href = "/manage?page=stats";
 						} else if(response.msg === messages.LOGIN_USERNAME_ERROR) {
 							console.log("Username doesn't exists");
 						} else if(response.msg === messages.LOGIN_PASSWORD_ERROR) {
@@ -1307,13 +1457,12 @@ function showProductData(t, locale, product, loc, callback) {
 		id: product.id
 	})
 	.then(response => {
-		console.log(response);
 		if(response.msg === messages.GET_PRODUCT_DATA_SUCCESS) {
 			product = response.payload.products[0];
 			
 			// Locale
 			var row = document.createElement("div");
-			row.setAttribute("class", "row align-left lang");
+			row.setAttribute("class", "row sb xmargin align-left lang");
 			var innerRow_node = document.createElement("div");
 			innerRow_node.setAttribute("class", "custom-select lang");
 			var select = document.createElement("select");
@@ -1346,7 +1495,7 @@ function showProductData(t, locale, product, loc, callback) {
 			
 			// Title
 			var row = document.createElement("div");
-			row.setAttribute("class", "row title");
+			row.setAttribute("class", "row sb xmargin title");
 			row.innerHTML = "<span>Titre</span>";
 			var innerRow_node = document.createElement("input");
 			innerRow_node.type = "text";
@@ -1358,7 +1507,7 @@ function showProductData(t, locale, product, loc, callback) {
 			
 			// Short description
 			var row = document.createElement("div");
-			row.setAttribute("class", "row title sdesc");
+			row.setAttribute("class", "row sb xmargin title sdesc");
 			row.innerHTML = "<span>Short Description</span>";
 			var innerRow_node = document.createElement("input");
 			innerRow_node.type = "text";
@@ -1370,7 +1519,7 @@ function showProductData(t, locale, product, loc, callback) {
 			
 			// Description
 			var row = document.createElement("div");
-			row.setAttribute("class", "row desc");
+			row.setAttribute("class", "row sb xmargin desc");
 			row.innerHTML = "<span>Description</span>";
 			var innerRow_node = document.createElement("textarea");
 			innerRow_node.name = product.description_id;
@@ -1381,7 +1530,7 @@ function showProductData(t, locale, product, loc, callback) {
 			
 			// Categories
 			var row = document.createElement("div");
-			row.setAttribute("class", "row cat");
+			row.setAttribute("class", "row sb xmargin cat");
 			row.innerHTML = "<span>Catégorie</span>";
 			var innerRow_node = document.createElement("div");
 			innerRow_node.setAttribute("class", "custom-select cat");
@@ -1418,7 +1567,6 @@ function showProductData(t, locale, product, loc, callback) {
 					} else {
 						$(select).val(product.category_id);
 					}
-					console.log($(select).val());
 					common.initCustomSelects();
 		
 					// Reload product's details on locale change
@@ -1440,7 +1588,7 @@ function showProductData(t, locale, product, loc, callback) {
 			
 			// Price
 			var row = document.createElement("div");
-			row.setAttribute("class", "row price");
+			row.setAttribute("class", "row sb xmargin price");
 			row.innerHTML = "<span>Price</span>";
 			var innerRow_node = document.createElement("input");
 			innerRow_node.type = "number";
@@ -1452,7 +1600,7 @@ function showProductData(t, locale, product, loc, callback) {
 			
 			// Image select
 			var row = document.createElement("div");
-			row.setAttribute("class", "row img");
+			row.setAttribute("class", "row sb xmargin img");
 			var input = document.createElement("input")
 			input.classList.add("img-select");
 			input.setAttribute("accept", "image/*");
@@ -1508,26 +1656,25 @@ function showProductData(t, locale, product, loc, callback) {
 			
 			// Update button
 			var row = document.createElement("div");
-			row.setAttribute("class", "row align-right");
+			row.setAttribute("class", "row sb xmargin align-right");
 			var uButton = document.createElement("button");
 			uButton.value = product.id;
 			uButton.innerHTML = locale["MAdd_core"];
 			// Update product
 			uButton.addEventListener("click", function() {
 				var img = [];
-				$(this).parent().siblings('[class="row img"]').find(".custom-img-select div").each((k, i) => {
+				$(this).parent().siblings('[class="row sb xmargin img"]').find(".custom-img-select div").each((k, i) => {
 					img.push($(i).children(":first-child").attr("src"));
 				});
-				console.log($(this).parent().siblings('[class="row align-left lang"]').find("select").val());
 				common.sendRequest(messages.UPDATE_PRODUCT_DATA_REQUEST, {
 					id: $(this).val(),
 					img: sortImages(product.img, img),
-					title: encodeURIComponent($(this).parent().siblings('[class="row title"]').children("input").val()),
-					short_description: encodeURIComponent($(this).parent().siblings('[class="row sdesc"]').children("textarea").val()),
-					description: encodeURIComponent($(this).parent().siblings('[class="row desc"]').children("textarea").val()),
-					category: $(this).parent().siblings('[class="row cat"]').find("select").val(),
-					price: $(this).parent().siblings('[class="row price"]').children("input").val(),
-					loc: $(this).parent().siblings('[class="row align-left lang"]').find("select").val()
+					title: encodeURIComponent($(this).parent().siblings('[class="row sb xmargin title"]').children("input").val()),
+					short_description: encodeURIComponent($(this).parent().siblings('[class="row sb xmargin sdesc"]').children("textarea").val()),
+					description: encodeURIComponent($(this).parent().siblings('[class="row sb xmargin desc"]').children("textarea").val()),
+					category: $(this).parent().siblings('[class="row sb xmargin cat"]').find("select").val(),
+					price: $(this).parent().siblings('[class="row sb xmargin price"]').children("input").val(),
+					loc: $(this).parent().siblings('[class="row sb xmargin align-left lang"]').find("select").val()
 				});
 			});
 			
@@ -1553,10 +1700,10 @@ function showProducts(locale, products) {
 	
 	for(const [k, v] of Object.entries(products)) {
 		var product_node = document.createElement("div");
-		product_node.classList.add("element");
+		product_node.setAttribute("class", "row xmargin list");
 		
 		var productHeader_node = document.createElement("div");
-		productHeader_node.setAttribute("class", "row productHeader clickable");
+		productHeader_node.setAttribute("class", "row sb xmargin productHeader clickable");
 		productHeader_node.innerHTML = "<span>" + decodeURIComponent(v.title) + "</span>";
 		productHeader_node.addEventListener("click", function() {
 			if(!$(this).next("div").is(":visible")) {
@@ -1650,8 +1797,7 @@ function initImageSelect() {
 				image_node.appendChild(image);
 				image_node.appendChild(default_img);
 				image_node.appendChild(remove_img);
-			
-				console.log(t);
+				
 				$(t).next("div").append(image_node);
 			}
 		});
@@ -1686,10 +1832,10 @@ function showLocaleKeyValuePair(locale) {
 			
 				$.each(content, function(k, v) {
 					var elem_node = document.createElement("div");
-					elem_node.classList.add("element");
+					$(elem_node).attr("class", "row xmargin list");
 
 					var col_node = document.createElement("div");
-					col_node.classList.add("row");
+					$(col_node).attr("class", "row sb xmargin");
 
 					var key_node = document.createElement("span");
 					key_node.innerHTML = k;
@@ -1778,7 +1924,7 @@ function showCatKeyValuePair(locale, parent, loc) {
 		
 				$.each(response.payload.categories, function(k, v) {
 					var subCat_node = document.createElement("div");
-					subCat_node.classList.add("element");
+					$(subCat_node).attr("class", "row xmargin list");
 	
 					var subCatRow_node = document.createElement("div");
 					var input = document.createElement("input");
@@ -1830,7 +1976,7 @@ function showCatKeyValuePair(locale, parent, loc) {
 				});
 				
 				var subCat_node = document.createElement("div");
-				subCat_node.classList.add("element");
+				$(subCat_node).attr("class", "row xmargin list");
 
 				var subCatRow_node = document.createElement("div");
 				var input = document.createElement("input");
@@ -1881,7 +2027,7 @@ function showSubCategories(locale) {
 			var files = response.payload.files;
 			
 			var row_node = document.createElement("div");
-			row_node.classList.add("row");
+			$(row_node).attr("class", "row sb xmargin");
 			
 			var customSelect_node = document.createElement("div");
 			customSelect_node.setAttribute("class", "custom-select lang");
@@ -1901,7 +2047,7 @@ function showSubCategories(locale) {
 			
 			var subCatList_node = document.createElement("div");
 			subCatList_node.id = "subCatList";
-			subCatList_node.classList.add("element");
+			subCatList_node.setAttribute("class", "row xmargin list");
 			
 			// TODO Get selected parent cat
 			var input = document.createElement("input");
@@ -1937,7 +2083,6 @@ function showSubCategories(locale) {
 					key: $(this).siblings("input").attr("name")
 				})
 				.then(response => {
-					console.log(response);
 					if(response.msg === messages.DELETE_CATEGORY_SUCCESS) {
 						common.sendRequest(messages.GET_CATEGORIES_REQUEST, {
 							parent: null,
@@ -2156,7 +2301,6 @@ function updateCartVisual(c, id, amount, callback) {
 		}
 	} else {
 		if(Object.keys(cart).length != 0) {
-			console.log($("#cart").children("div:last-child").find(`[data-id=${id}]`));
 			if($("#cart").children("div:last-child").find(`[data-id=${id}]`).length != 0) {
 				let n = parseInt($("#cart").children("div:last-child").find(`[data-id=${id}]`).find("[quantity]").html().match(/\d+/));
 				$("#cart").children("div:last-child").find(`[data-id=${id}]`).find("[quantity]").html(`Quantité : ${n + amount}`)
@@ -2205,7 +2349,7 @@ function addCartComponent(product, amount) {
 	productLink.href = "./products?p=" + product.id;
 	
 	var productImg = document.createElement("img");
-	if(v.img == null) {
+	if(product.img == null) {
 		productImg.src = "src/img/default.jpeg";
 	} else {
 		productImg.src = product.img;
@@ -2230,6 +2374,12 @@ function addCartComponent(product, amount) {
 	
 	var productRemove = document.createElement("template-remove");
 	productRemove.setAttribute("class", "remove");
+	$(productRemove).attr({
+		"weight": 0.0625,
+		"size": 1.25,
+		"color": "#333",
+		"margin": 0.125
+	});
 	productRemove.addEventListener("click", function(e) {
 		e.stopPropagation();
 		e.preventDefault();
@@ -2262,7 +2412,6 @@ function pageConfig(title, ltype) {
 		})
 		.then(response => {
 			if(response.msg === messages.SESSION_KEEP_ALIVE_SUCCESS) {
-				common.setCookie("mx-access-token", response.payload.token, new Date(moment().add(1, "minute")).toUTCString());
 				keepAliveInterval = setInterval(function() {
 					common.keepAlive({
 						token: common.getCookie("mx-access-token"),
@@ -2271,13 +2420,9 @@ function pageConfig(title, ltype) {
 					.then(response => {
 						if(response.msg !== messages.SESSION_KEEP_ALIVE_SUCCESS) {
 							clearTimeout(keepAliveInterval);
-						} else {
-							common.setCookie("mx-access-token", response.payload.token, new Date(moment().add(1, "minute")).toUTCString());
 						}
 					});
 				}, 5000);
-			} else {
-				common.setCookie("mx-access-token", "", new Date(moment()).toUTCString());
 			}
 		});
 		
@@ -2289,7 +2434,6 @@ function pageConfig(title, ltype) {
 		})
 		.then(response => {
 			if(response.msg === messages.SESSION_KEEP_ALIVE_SUCCESS) {
-				common.setCookie("cx-access-token", response.payload.token, new Date(moment().add(1, "minute")).toUTCString());
 				keepAliveInterval = setInterval(function() {
 					common.keepAlive({
 						token: common.getCookie("cx-access-token"),
@@ -2298,13 +2442,9 @@ function pageConfig(title, ltype) {
 					.then(response => {
 						if(response.msg !== messages.SESSION_KEEP_ALIVE_SUCCESS) {
 							clearTimeout(keepAliveInterval);
-						} else {
-							common.setCookie("cx-access-token", response.payload.token, new Date(moment().add(1, "minute")).toUTCString());
 						}
 					});
 				}, 5000);
-			} else {
-				common.setCookie("cx-access-token", "", new Date(moment()).toUTCString());
 			}
 		});
 	}
@@ -2318,19 +2458,15 @@ class TemplateRemove extends HTMLElement {
 		
 		var span = document.createElement("span");
 		span.style.position = "absolute";
-		span.style.width = "0.625rem";
 		span.style.height = "0rem";
-		span.style.border = "1px solid #333";
-		span.style.borderRadius = "25%";
+		span.style.border = "solid";
 		span.style.transform = "rotate(45deg)";
 		shadow.appendChild(span);
 		
 		var span = document.createElement("span");
 		span.style.position = "absolute";
-		span.style.width = "0.625rem";
 		span.style.height = "0rem";
-		span.style.border = "1px solid #333";
-		span.style.borderRadius = "25%";
+		span.style.border = "solid";
 		span.style.transform = "rotate(-45deg)";
 		shadow.appendChild(span);
 	}
@@ -2340,12 +2476,29 @@ class TemplateRemove extends HTMLElement {
 	}
 }
 
-function updateRemoveTemplate(elem) {	
+function updateRemoveTemplate(elem) {
+	var weight = parseFloat(elem.getAttribute("weight"));
+	var size = parseFloat(elem.getAttribute("size"));
+	var color = elem.getAttribute("color");
+    var margin = parseFloat(elem.getAttribute("margin"));
+    
+    $(elem).css({
+    	position: "relative",
+    	width: `${size}rem`,
+        height: `${size}rem`
+    });
+    
+    var strokeSize = size - (margin*2 + weight*2);
 	elem.shadowRoot.childNodes.forEach(item => {
+        $(item).css({
+        	width: `${strokeSize}rem`,
+            "border-width": `${weight}rem`,
+            "border-color": color,
+            "borderRadius": `${weight}rem`
+        });
 		$(item).css({
-			width: `${(Math.sin(45*Math.PI/180) * parseInt($(elem).css("width"))) * 0.0625}rem`,
-			left: `calc(50% - ${((Math.sin(45*Math.PI/180) * parseInt($(elem).css("width")) * 0.0625) / 2 + parseInt($(item).css("border-left-width")) * 0.0625)}rem)`,
-			top: `calc(50% - ${parseInt($(item).css("border-left-width")) * 0.0625}rem)`
+			left: `${margin}rem`,
+			top: `calc(50% - ${weight}rem)`
 		})
 	});
 }
@@ -2436,8 +2589,6 @@ function initLogEvents() {
 			})
 			.then(response => {
 				if(response.msg === messages.LOGIN_SUCCESS) {
-					common.setCookie("cx-access-token", response.payload.token, new Date(moment().add(1, "minute")).toUTCString());
-					
 					location.reload();
 				}
 			});
@@ -2458,7 +2609,6 @@ function initLogEvents() {
 			})
 			.then(response => {
 				if(response.msg === messages.LOGOUT_SUCCESS) {
-					common.setCookie("cx-access-token", response.payload.token, new Date(moment()).toUTCString());
 					$("#log > div:last-child").empty();
 					
 					location.reload();

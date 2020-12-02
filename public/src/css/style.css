@@ -12,7 +12,6 @@
     font-family: 'bespokeeh8ejagekt';
     src: url('./font/tightAllCaps/tightAllCaps.eot');
     src: url('./font/tightAllCaps/tightAllCaps.eot?#iefix') format('embedded-opentype'),
-         url('./font/tightAllCaps/tightAllCaps.woff2') format('woff2'),
          url('./font/tightAllCaps/tightAllCaps.woff') format('woff'),
          url('./font/tightAllCaps/tightAllCaps-webfont.svg#tightAllCaps') format('svg');
     font-weight: normal;
@@ -532,15 +531,8 @@ textarea {
 }
 
 .remove{
-	position: absolute;
 	background: rgba(255, 255, 255, 0);
-	color: #333;
 	border-radius: 100%;
-	top: 0rem;
-	right: 0rem;
-	width: 1.0625rem;
-	height: 1.0625rem;
-	padding: 0.125rem;
 	transition: background 0.5s;
 }
 
@@ -878,22 +870,6 @@ textarea {
 	display: none;
 }
 
-.element {
-	display: flex;
-	flex-direction: column !important;
-	width: 100%;
-	margin: 0.625rem 0rem;
-}
-
-.element:not(:first-child) {
-	border-top: 0.0625rem solid #ddd;
-}
-
-.col {
-	display: flex;
-	flex-direction: column !important;
-}
-
 .vCardContainer {
 	position: absolute;
 	background-color: #ddd;
@@ -904,7 +880,7 @@ textarea {
 	color: #333;
 }
 
-.vCardContainer > div:last-child {
+.vCardContainer > div > div:last-child {
 	overflow-y: auto;
 	max-height: 15rem;
 }
@@ -922,39 +898,54 @@ textarea {
 	border: 0.125rem solid blue !important;
 }
 
-.row {
+.element {
+	display: flex;
+	flex-direction: column !important;
 	width: 100%;
+	margin: 0.625rem 0rem;
+}
+
+.list:not(:first-child) {
+	border-top: 0.0625rem solid #ddd;
+}
+
+.col {
+	display: flex;
+	flex-direction: column !important;
+}
+
+.row {
 	display: flex;
 	flex-direction: row !important;
+	width: 100%;
 	flex-wrap: wrap;
+}
+
+.sb {
 	justify-content: space-between;
 	align-items: center;
-	margin: 0.625rem 0rem;
 }
 
-.row > * {
-	margin: 0.3125rem;
-}
-
-.crow {
-	width: 100%;
-	display: flex;
-	flex-direction: row !important;
-	flex-wrap: wrap;
+.sa {
 	justify-content: space-around;
 	align-items: center;
+}
+
+.xmargin {
 	margin: 0.625rem 0rem;
 }
 
-.crow > * {
+.xmargin > * {
 	margin: 0.3125rem;
 }
 
 .align-right {
+	display: flex;
 	justify-content: flex-end;
 }
 
 .align-left {
+	display: flex;
 	justify-content: flex-start;
 }
 
