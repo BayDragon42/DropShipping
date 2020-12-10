@@ -37,22 +37,36 @@ class DBHandler {
 		})
 	}
 	
-	query(query, callback) {
+	query(query, callback, array) {
 		var t = this;
 		this.logHandler.debug(query);
 		//var con = this.openConnexion();
 		
-		this.con.query(query, function(err, result) {
-			if(err) {
-				if(err.errno == 1049) {
-					t.logHandler.debug(`${err} : Failed to connect MySql database`);
+		if(array === undefined) {
+			this.con.query(query, function(err, result) {
+				if(err) {
+					if(err.errno == 1049) {
+						t.logHandler.debug(`${err} : Failed to connect MySql database`);
+					} else {
+						t.logHandler.debug(`${err} : Mysql Database connection error`);
+					}
 				} else {
-					t.logHandler.debug(`${err} : Mysql Database connection error`);
+					callback(result);
 				}
-			} else {
-				callback(result);
-			}
-		});
+			});
+		} else {
+			this.con.query(query, array, function(err, result) {
+				if(err) {
+					if(err.errno == 1049) {
+						t.logHandler.debug(`${err} : Failed to connect MySql database`);
+					} else {
+						t.logHandler.debug(`${err} : Mysql Database connection error`);
+					}
+				} else {
+					callback(result);
+				}
+			});
+		}
 		
 		//this.closeConnexion(con);
 	}

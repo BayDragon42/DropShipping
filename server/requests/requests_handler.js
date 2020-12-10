@@ -108,7 +108,7 @@ class Requests {
 		this.dbHandler.query(`SELECT g.id, a.password FROM admin a LEFT JOIN groups g ON a.group_id = g.id WHERE a.user_id = "${user_id}"`, function(result) {
 			if(result.length != 0) {
 				if(pass === result[0].password) {
-					var expires = moment().add(1, "minutes");
+					var expires = moment().add(10, "minutes");
 					
 					var hash = crypto.createHmac("sha512", user_id);
 					hash.update(`${expires.valueOf()}`);
@@ -149,7 +149,7 @@ class Requests {
 		this.dbHandler.query(`SELECT * FROM users WHERE user_id = "${user_id}"`, function(result) {
 			if(result.length != 0) {
 				if(pass === result[0].password) {
-					var expires = moment().add(1, "minutes");
+					var expires = moment().add(10, "minutes");
 					
 					var hash = crypto.createHmac("sha512", user_id);
 					hash.update(`${expires.valueOf()}`);
@@ -219,7 +219,7 @@ class Requests {
 		var user = this.usersHandler.findUser(token, s);
 		if(user != undefined) {
 			this.logHandler.log(`${user.user_id} : keep alive`);
-			var expires = moment().add(1, "minutes");
+			var expires = moment().add(10, "minutes");
 			
 			user.setExpire(expires.valueOf());
 			
@@ -649,8 +649,7 @@ class Requests {
 	deleteCategory(key, callback) {
 		this.dbHandler.query(`DELETE FROM loc_keys WHERE loc_id = "${key}"`, function(result) {
 			callback({
-				msg: messages.DELETE_CATEGORY_SUCCESS,
-				payload: {}
+				msg: messages.DELETE_CATEGORY_SUCCESS
 			});
 		});
 	}
@@ -658,8 +657,7 @@ class Requests {
 	deleteLocaleFile(file, callback) {
 		this.dbHandler.query(`DELETE FROM locale WHERE loc = "${file}"`, function(result) {
 			callback({
-				msg: messages.DELETE_LOCALE_FILE_SUCCESS,
-				payload: {}
+				msg: messages.DELETE_LOCALE_FILE_SUCCESS
 			});
 		});
 	}
@@ -667,8 +665,7 @@ class Requests {
 	logout(token, callback) {
 		if(this.usersHandler.removeUser(token)) {
 			callback({
-				msg: messages.LOGOUT_SUCCESS,
-				payload: {}
+				msg: messages.LOGOUT_SUCCESS
 			});
 		} else {
 			callback({
@@ -693,7 +690,7 @@ class Requests {
 								msg: messages.GET_USER_ADDRESSES_SUCCESS,
 								payload: {
 									addresses: result,
-									last: res.payload
+									last: res.payload.address
 								}
 							});
 						} else {
@@ -727,14 +724,7 @@ class Requests {
 					callback({
 						msg: messages.GET_LAST_USED_ADDRESS_SUCCESS,
 						payload: {
-							name: result[0].name,
-							surname: result[0].surname,
-							address: result[0].address,
-							npa: result[0].npa,
-							town: result[0].town,
-							country: result[0].country,
-							phone: result[0].phone,
-							last_used: result[0].last_used
+							address: result[0]
 						}
 					});
 				} else {
@@ -755,10 +745,93 @@ class Requests {
 	updateLastUsedAddress(id, callback) {
 		this.dbHandler.query(`UPDATE addresses SET last_used = CURRENT_TIMESTAMP() WHERE id = ${id}`, function(result) {
 			callback({
-				msg: messages.UPDATE_LAST_USED_ADDRESS_SUCCESS,
-				payload: {}
+				msg: messages.UPDATE_LAST_USED_ADDRESS_SUCCESS
 			});
 		});
+	}
+	
+	updateAddress(id, newAddress, callback) {
+		this.dbHandler.query(`UPDATE addresses SET ? WHERE id = ${id}`, function(result) {
+			console.log(result);
+			if(result.affectedRows === 1) {
+				callback({
+					msg: messages.UPDATE_ADDRESS_SUCCESS
+				});
+			} else {
+				callback({
+					msg: messages.UPDATE_ADDRESS_ERROR,
+					payload: {
+						err: "Id not found"
+					}
+				});
+			}
+		}, newAddress);
+	}
+	
+	addAddress(token, address, callback) {
+		var user = this.usersHandler.findUser(token, 1);
+		
+		if(user) {
+			this.dbHandler.query(`INSERT INTO addresses (user_id, name, surname, address, npa, town, country, phone, society, floor, batiment, door_code1, door_code2, interphone, instructions) VALUES ("${user.user_id}", "${address.name}", "${address.surname}", "${address.address}", "${address.npa}", "${address.town}", "${address.country}", "${address.phone}", "${address.society}", "${address.floor}", "${address.batiment}", "${address.door_code1}", "${address.door_code2}", "${address.interphone}", "${address.instructions}")`, function(result) {
+				if(result.insertId) {
+					callback({
+						msg: messages.ADD_ADDRESS_SUCCESS
+					});
+				} else {
+					callback({
+						msg: messages.ADD_ADDRESS_ERROR,
+						err: "Could not add address"
+					});
+				}
+			});
+		} else {
+			callback({
+				msg: messages.ADD_ADDRESS_ERROR,
+				err: "User not found"
+			});
+		}
+	}
+	
+	deleteAddress(id, callback) {
+		this.dbHandler.query(`DELETE FROM addresses WHERE id = ${id}`, function(result) {
+			if(result.affectedRows == 1) {
+				callback({
+					msg: messages.DELETE_ADDRESS_SUCCESS,
+				});
+			} else {
+				callback({
+					msg: messages.DELETE_ADDRESS_ERROR,
+					err: "ID could not be found"
+				});
+			}
+		});
+	}
+	
+	getUserEmail(token, callback) {
+		var user = this.usersHandler.findUser(token, 1);
+		
+		if(user) {
+			this.dbHandler.query(`SELECT email FROM users WHERE user_id = "${user.user_id}"`, function(result) {
+				if(result.length == 1) {
+					callback({
+						msg: messages.GET_USER_EMAIL_SUCCESS,
+						payload: {
+							email: result[0].email
+						}
+					});
+				} else {
+					callback({
+						msg: messages.GET_USER_EMAIL_ERROR,
+						err: "Could not find user in DB"
+					});
+				}
+			});
+		} else {
+			callback({
+				msg: messages.GET_USER_EMAIL_ERROR,
+				err: "User not found"
+			});
+		}
 	}
   
 	parseRequest(msg, payload, callback) {
@@ -891,6 +964,30 @@ class Requests {
 			
 			case messages.UPDATE_LAST_USED_ADDRESS_REQUEST:
 				this.updateLastUsedAddress(payload.id, function(result) {
+					callback(result)
+				})
+				break;
+			
+			case messages.UPDATE_ADDRESS_REQUEST:
+				this.updateAddress(payload.id, payload.address, function(result) {
+					callback(result)
+				})
+				break;
+			
+			case messages.ADD_ADDRESS_REQUEST:
+				this.addAddress(payload.token, payload.address, function(result) {
+					callback(result)
+				})
+				break;
+			
+			case messages.DELETE_ADDRESS_REQUEST:
+				this.deleteAddress(payload.address_id, function(result) {
+					callback(result)
+				})
+				break;
+			
+			case messages.GET_USER_EMAIL_REQUEST:
+				this.getUserEmail(payload.token, function(result) {
 					callback(result)
 				})
 				break;

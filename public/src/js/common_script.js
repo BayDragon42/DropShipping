@@ -20,6 +20,7 @@ function sendRequest(msg, payload) {
 		})
 	})
 	.then(response => {
+		console.log(JSON.parse(response));
 		return JSON.parse(response);
 	});
 }

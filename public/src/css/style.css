@@ -530,13 +530,13 @@ textarea {
 	text-align: center;
 }
 
-.remove{
+.cardButton{
 	background: rgba(255, 255, 255, 0);
 	border-radius: 100%;
 	transition: background 0.5s;
 }
 
-.remove:hover{
+.cardButton:hover{
 	background: rgba(0, 200, 255, 1);
 }
 
@@ -874,7 +874,7 @@ textarea {
 	position: absolute;
 	background-color: #ddd;
 	border: none;
-	width: 80%;
+	width: 80% !important;
 	margin: auto;
 	padding: 0.625rem;
 	color: #333;
@@ -917,26 +917,39 @@ textarea {
 .row {
 	display: flex;
 	flex-direction: row !important;
-	width: 100%;
 	flex-wrap: wrap;
 }
 
+.full {
+	width: 100%;
+}
+
 .sb {
+	display: flex;
 	justify-content: space-between;
 	align-items: center;
 }
 
 .sa {
+	display: flex;
 	justify-content: space-around;
 	align-items: center;
 }
 
-.xmargin {
+.Omargin {
+	margin: 0 !important;
+}
+
+.Omargin > * {
+	margin: 0;
+}
+
+.Xmargin {
 	margin: 0.625rem 0rem;
 }
 
-.xmargin > * {
-	margin: 0.3125rem;
+.Xmargin > * {
+	margin: 0.3125rem 0rem;
 }
 
 .align-right {

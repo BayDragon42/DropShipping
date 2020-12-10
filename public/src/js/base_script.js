@@ -31,18 +31,18 @@ function getScript(locale, callback) {
 					
 						pageConfig(decodeURIComponent(product.title), 1);
 						var productInfo_node = document.createElement("div");
-						productInfo_node.setAttribute("class", "row xmargin list");
+						productInfo_node.setAttribute("class", "row full Xmargin list");
 					
 						// Title
 						var row_node = document.createElement("div");
-						row_node.setAttribute("class", "row sa xmargin");
+						row_node.setAttribute("class", "row full sa Xmargin");
 						row_node.innerHTML = decodeURIComponent(product.title);
 					
 						productInfo_node.appendChild(row_node);
 					
 						// Images and PInfo
 						var row_node = document.createElement("div");
-						row_node.setAttribute("class", "row sa xmargin");
+						row_node.setAttribute("class", "row full sa Xmargin");
 					
 						var imgContainer_node = document.createElement("div");
 						imgContainer_node.classList.add("viewer");
@@ -265,7 +265,7 @@ function getScript(locale, callback) {
 					
 						// Description
 						var row_node = document.createElement("div");
-						row_node.setAttribute("class", "row sa xmargin");
+						row_node.setAttribute("class", "row full sa Xmargin");
 						row_node.innerHTML = decodeURIComponent(product.description);
 					
 						productInfo_node.appendChild(row_node);
@@ -536,7 +536,7 @@ function getScript(locale, callback) {
 								total += product.price * value;
 							
 								var productRemove = document.createElement("template-remove");
-								productRemove.setAttribute("class", "remove");
+								productRemove.setAttribute("class", "cardButton");
 								$(productRemove).attr({
 									"weight": 0.0625,
 									"size": 1.25,
@@ -569,10 +569,10 @@ function getScript(locale, callback) {
 								counter++;
 								if(counter == Object.keys(cart).length) {
 									var summaryContainerNode = document.createElement("div");
-									summaryContainerNode.setAttribute("class", "row xmargin list");
+									summaryContainerNode.setAttribute("class", "row full Xmargin list");
 				
 									var row = document.createElement("div");
-									row.setAttribute("class", "row sb xmargin");
+									row.setAttribute("class", "row full sb Xmargin");
 									var span = document.createElement("span");
 									span.innerHTML = "Total:";
 									row.appendChild(span);
@@ -582,7 +582,7 @@ function getScript(locale, callback) {
 									summaryContainerNode.appendChild(row);
 				
 									var row = document.createElement("div");
-									row.setAttribute("class", "row sb xmargin");
+									row.setAttribute("class", "row full sb Xmargin");
 									var span = document.createElement("span");
 									span.innerHTML = "Total Frais:";
 									row.appendChild(span);
@@ -590,9 +590,9 @@ function getScript(locale, callback) {
 									span.innerHTML = 0;
 									row.appendChild(span);
 									summaryContainerNode.appendChild(row);
-				
+									
 									var row = document.createElement("div");
-									row.setAttribute("class", "row sb xmargin");
+									row.setAttribute("class", "row full sb Xmargin");
 									var button = document.createElement("a");
 									button.classList.add("button");
 									button.href = "/";
@@ -603,10 +603,11 @@ function getScript(locale, callback) {
 									button.href = "/cart?step=2";
 									button.innerHTML = "Suivant";
 									row.appendChild(button);
+									
 									summaryContainerNode.appendChild(row);
-				
+									
 									$("#content").append(summaryContainerNode);
-								
+									
 									callback();
 								}
 							}
@@ -621,33 +622,97 @@ function getScript(locale, callback) {
 			case /\/cart\?step=2/.test(path):
 				pageConfig("TBD", 1);
 				
+				localStorage.setItem("userAddrCart", "");
+				
+				var getUserAddresses;
+				var useThisAddress = function(addr) {
+					$("[name=userName]").html(`${addr.surname} ${addr.name}`);
+					$("[name=addr]").html(addr.address);
+					$("[name=npaTwn]").html(`${addr.npa} ${addr.town}`);
+					$("[name=cnty]").html(addr.country);
+					$("[name=ph]").html(addr.phone);
+	
+					localStorage.setItem("userAddrCart", JSON.stringify(addr));
+				}
 				var initAddressForm = function(t, addr) {
+					var getFormAddress = function() {
+						if(addr !== undefined) {
+							common.sendRequest(messages.GET_USER_EMAIL_REQUEST, {
+								token: common.getCookie("cx-access-token")
+							})
+							.then(response => {
+								return {
+									name: $("[name=name]").val(),
+									surname: $("[name=surname]").val(),
+									email: response.payload.email,
+									address: $("[name=address]").val(),
+									npa: $("[name=npa]").val(),
+									town: $("[name=town]").val(),
+									country: $("[name=country]").val(),
+									phone: $("[name=phone]").val(),
+									society: $("[name=society]").val() ? $("[name=society]").val() : null,
+									floor: $("[name=floor]").val() ? $("[name=floor]").val() : null,
+									batiment: $("[name=batiment]").val() ? $("[name=batiment]").val() : null,
+									door_code1: $("[name=doorCode1]").val() ? $("[name=doorCode1]").val() : null,
+									door_code2: $("[name=doorCode2]").val() ? $("[name=doorCode2]").val() : null,
+									interphone: $("[name=interphone]").val() ? $("[name=interphone]").val() : null,
+									instructions: $("[name=instructions]").val() ? $("[name=instructions]").val() : null
+								}
+							});
+						} else {
+							return {
+								name: $("[name=name]").val(),
+								surname: $("[name=surname]").val(),
+								email: $("[name=email]").val(),
+								address: $("[name=address]").val(),
+								npa: $("[name=npa]").val(),
+								town: $("[name=town]").val(),
+								country: $("[name=country]").val(),
+								phone: $("[name=phone]").val(),
+								society: $("[name=society]").val() ? $("[name=society]").val() : null,
+								floor: $("[name=floor]").val() ? $("[name=floor]").val() : null,
+								batiment: $("[name=batiment]").val() ? $("[name=batiment]").val() : null,
+								door_code1: $("[name=doorCode1]").val() ? $("[name=doorCode1]").val() : null,
+								door_code2: $("[name=doorCode2]").val() ? $("[name=doorCode2]").val() : null,
+								interphone: $("[name=interphone]").val() ? $("[name=interphone]").val() : null,
+								instructions: $("[name=instructions]").val() ? $("[name=instructions]").val() : null
+							}
+						}
+					}
+					
 					var addressesContainer = document.createElement("div");
-					$(addressesContainer).attr("class", "col xmargin");
+					$(addressesContainer).attr("class", "col full Xmargin");
 					
 					if(addr !== undefined) {
 						var addrListHeader = document.createElement("div");
-						$(addrListHeader).attr("class", "align-left");
+						$(addrListHeader).attr("class", "sb Omargin");
 					
-						var productRemove = document.createElement("template-remove");
-						productRemove.setAttribute("class", "remove");
-						productRemove.addEventListener("click", function() {
-							//$(this).parents("[class='element vCardContainer']").fadeOut(100);
+						var addrRemove = document.createElement("template-back");
+						addrRemove.setAttribute("class", "cardButton");
+						$(addrRemove).attr({
+							"weight": 0.0625,
+							"size": 1.25,
+							"color": "#333",
+							"margin": 0.125,
+							"angle": 80
 						});
-						addrListHeader.appendChild(productRemove);
+						addrRemove.addEventListener("click", function() {
+							getUserAddresses();
+						});
+						addrListHeader.appendChild(addrRemove);
 					
-						var productRemove = document.createElement("template-remove");
-						productRemove.setAttribute("class", "remove");
-						$(productRemove).attr({
+						var addrRemove = document.createElement("template-remove");
+						addrRemove.setAttribute("class", "cardButton");
+						$(addrRemove).attr({
 							"weight": 0.0625,
 							"size": 1.25,
 							"color": "#333",
 							"margin": 0.125
 						});
-						productRemove.addEventListener("click", function() {
-							$(this).parents("[class='element vCardContainer']").fadeOut(100);
+						addrRemove.addEventListener("click", function() {
+							$(this).parents("[class='row Xmargin vCardContainer']").fadeOut(100);
 						});
-						addrListHeader.appendChild(productRemove);
+						addrListHeader.appendChild(addrRemove);
 						
 						addressesContainer.appendChild(addrListHeader);
 					}
@@ -660,31 +725,44 @@ function getScript(locale, callback) {
 					
 					var input = document.createElement("input");
 					input.placeholder = "prenom";
+					input.value = (addr != null) ? addr.surname : "" || "";
 					input.name = "surname";
 					addressesContainer.append(input);
 					
+					if(addr === undefined) {
+						var input = document.createElement("input");
+						input.placeholder = "e-mail";
+						input.name = "email";
+						addressesContainer.append(input);
+					}
+					
 					var input = document.createElement("input");
 					input.placeholder = "addresse";
+					input.value = (addr != null) ? addr.address : "" || "";
 					input.name = "address";
 					addressesContainer.append(input);
 					
 					var input = document.createElement("input");
 					input.placeholder = "npa";
+					input.value = (addr != null) ? addr.npa : "" || "";
 					input.name = "npa";
 					addressesContainer.append(input);
 					
 					var input = document.createElement("input");
 					input.placeholder = "ville";
+					input.value = (addr != null) ? addr.town : "" || "";
 					input.name = "town";
 					addressesContainer.append(input);
 					
 					var input = document.createElement("input");
 					input.placeholder = "pays";
+					input.value = (addr != null) ? addr.country : "" || "";
 					input.name = "country";
 					addressesContainer.append(input);
 					
 					var input = document.createElement("input");
 					input.placeholder = "tel.";
+					input.value = (addr != null) ? addr.phone : "" || "";
 					input.name = "phone";
 					addressesContainer.append(input);
 					
@@ -698,45 +776,104 @@ function getScript(locale, callback) {
 					addressesContainer.append(moreInfo);
 					
 					compInfo = document.createElement("div");
-					$(compInfo).attr("class", "col xmargin");
+					$(compInfo).attr("class", "col full Xmargin");
 					$(compInfo).hide();
 					
 					var input = document.createElement("input");
 					input.placeholder = "societe";
+					input.value = (addr != null) ? addr.society : "" || "";
 					input.name = "society";
 					compInfo.append(input);
 					
 					var input = document.createElement("input");
 					input.placeholder = "etage";
+					input.value = (addr != null) ? addr.floor : "" || "";
 					input.name = "floor";
 					compInfo.append(input);
 					
 					var input = document.createElement("input");
 					input.placeholder = "bat.";
+					input.value = (addr != null) ? addr.batiment : "" || "";
 					input.name = "batiment";
 					compInfo.append(input);
 					
 					var input = document.createElement("input");
 					input.placeholder = "interphone";
+					input.value = (addr != null) ? addr.interphone : "" || "";
 					input.name = "interphone";
 					compInfo.append(input);
 					
 					var input = document.createElement("input");
 					input.placeholder = "code porte";
+					input.value = (addr != null) ? addr.door_code1 : "" || "";
 					input.name = "doorCode1";
 					compInfo.append(input);
 					
 					var input = document.createElement("input");
 					input.placeholder = "code porte 2";
+					input.value = (addr != null) ? addr.door_code2 : "" || "";
 					input.name = "doorCode2";
 					compInfo.append(input);
 					
 					var input = document.createElement("input");
 					input.placeholder = "instructions";
-					input.name = "instruction";
+					input.value = (addr != null) ? addr.instructions : "" || "";
+					input.name = "instructions";
 					compInfo.append(input);
 					
 					addressesContainer.appendChild(compInfo);
+					
+					if(addr !== undefined) {
+						var addLink = document.createElement("a");
+						$(addLink).attr("class", "button");
+						addLink.addEventListener("click", function() {
+							if(addr != null) {
+								// Updates address
+								common.sendRequest(messages.UPDATE_ADDRESS_REQUEST, {
+									id: addr.id,
+									address: getFormAddress()
+								})
+								.then(response => {
+									if(response.msg === messages.UPDATE_ADDRESS_SUCCESS) {
+										getUserAddresses();
+										useThisAddress(getFormAddress());
+									}
+								});
+							} else {
+								// Adds new address
+								common.sendRequest(messages.ADD_ADDRESS_REQUEST, {
+									token: common.getCookie("cx-access-token"),
+									address: getFormAddress()
+								})
+								.then(response => {
+									if(response.msg === messages.ADD_ADDRESS_SUCCESS) {
+										getUserAddresses();
+										useThisAddress(getFormAddress());
+									}
+								});
+							}
+						});
+						addLink.innerHTML = "a"
+						addressesContainer.append(addLink);
+					} else {
+						var row = document.createElement("div");
+						row.setAttribute("class", "row full sb Xmargin");
+						var button = document.createElement("a");
+						button.classList.add("button");
+						button.href = "/cart?step=1";
+						button.innerHTML = "Retour";
+						row.appendChild(button);
+						var button = document.createElement("a");
+						button.classList.add("button");
+						button.addEventListener("click", function(e) {
+							localStorage.setItem("userAddrCart", JSON.stringify(getFormAddress()));
+						});
+						button.href = "/cart?step=3";
+						button.innerHTML = "Suivant";
+						row.appendChild(button);
+						
+						addressesContainer.append(row);
+					}
 					
 					t.append(addressesContainer);
 				}
@@ -744,7 +881,7 @@ function getScript(locale, callback) {
 				if(common.getCookie("cx-access-token")) {
 					var addressList = document.createElement("div");
 					addressList.id = "addrList";
-					$(addressList).attr("class", "row xmargin list vCardContainer");
+					$(addressList).attr("class", "row full Xmargin vCardContainer");
 					
 					$("#content").append(addressList);
 		
@@ -756,9 +893,11 @@ function getScript(locale, callback) {
 					})
 					.then(response => {
 						if(response.msg === messages.GET_LAST_USED_ADDRESS_SUCCESS) {
-							var address = response.payload;
+							var address = response.payload.address;
 							
-							var getUserAddresses = function() {
+							localStorage.setItem("userAddrCart", JSON.stringify(address));
+							
+							getUserAddresses = function() {
 								common.sendRequest(messages.GET_USER_ADDRESSES_REQUEST, {
 									token: common.getCookie("cx-access-token")
 								})
@@ -769,41 +908,35 @@ function getScript(locale, callback) {
 										$(addressList).empty();
 										
 										var addressesContainer = document.createElement("div");
-										$(addressesContainer).attr("class", "row xmargin list");
+										$(addressesContainer).attr("class", "col full");
 										
 										var addrListHeader = document.createElement("div");
-										$(addrListHeader).attr("class", "align-right");
+										$(addrListHeader).attr("class", "align-right full");
 										
-										var productRemove = document.createElement("template-remove");
-										productRemove.setAttribute("class", "remove");
-										$(productRemove).attr({
+										var addrRemove = document.createElement("template-remove");
+										addrRemove.setAttribute("class", "cardButton");
+										$(addrRemove).attr({
 											"weight": 0.0625,
 											"size": 1.25,
 											"color": "#333",
 											"margin": 0.125
 										});
-										productRemove.addEventListener("click", function() {
-											$(this).parents("[class='element vCardContainer']").fadeOut(100);
+										addrRemove.addEventListener("click", function() {
+											$(this).parents("[class*=vCardContainer]").fadeOut(100);
 										});
-										addrListHeader.appendChild(productRemove);
+										addrListHeader.appendChild(addrRemove);
 										addressesContainer.appendChild(addrListHeader);
 										
 										var cardContainer = document.createElement("div");
-										$(cardContainer).attr("class", "row xmargin list");
+										$(cardContainer).attr("class", "row full Xmargin list");
 							
 										addresses.forEach(item => {
 											var visitCard = document.createElement("div");
 											visitCard.addEventListener("click", function() {
 												// Use this address
-												$(this).parents("[class='element vCardContainer']").siblings().children("[name=userName]").html(`${item.surname} ${item.name}`);
-												$(this).parents("[class='element vCardContainer']").siblings().children("[name=addr]").html(item.address);
-												$(this).parents("[class='element vCardContainer']").siblings().children("[name=npa]").html(`${item.npa} ${item.town}`);
-												$(this).parents("[class='element vCardContainer']").siblings().children("[name=country]").html(item.country);
-												$(this).parents("[class='element vCardContainer']").siblings().children("[name=phone]").html(item.phone);
+												useThisAddress(item);
 									
-												localStorage.setItem("userAddrCart", JSON.stringify(item));
-									
-												$(this).parents("[class='element vCardContainer']").fadeOut(100, function() {
+												$(this).parents("[class*=vCardContainer]").fadeOut(100, function() {
 													// Updates last used address
 													common.sendRequest(messages.UPDATE_LAST_USED_ADDRESS_REQUEST, {
 														id: item.id
@@ -811,10 +944,40 @@ function getScript(locale, callback) {
 												});
 											});
 											if(item.last_used == response.payload.last.last_used) {
-												$(visitCard).attr("class", "col visitCard vcActive");
+												$(visitCard).attr("class", "col full visitCard vcActive");
 											} else {
-												$(visitCard).attr("class", "col visitCard");
+												$(visitCard).attr("class", "col full visitCard");
 											}
+											
+											var header = document.createElement("div");
+											header.setAttribute("class", "align-right full");
+											
+											var addrRemove = document.createElement("template-remove");
+											addrRemove.addEventListener("click", function(e) {
+												e.stopPropagation();
+												// Deletes address
+												common.sendRequest(messages.DELETE_ADDRESS_REQUEST, {
+													address_id: item.id
+												})
+												.then(response => {
+													if(response.msg === messages.DELETE_ADDRESS_SUCCESS) {
+														$(this).parents("[class*=visitCard]").slideUp(200, function() {
+															getUserAddresses();
+															useThisAddress(item);
+														});
+													}
+												});
+											});
+											addrRemove.setAttribute("class", "cardButton");
+											$(addrRemove).css("text-align", "right");
+											$(addrRemove).attr({
+												"weight": 0.0625,
+												"size": 1.25,
+												"color": "#333",
+												"margin": 0.125
+											});
+											header.appendChild(addrRemove);
+											visitCard.appendChild(header);
 											
 											var span = document.createElement("span");
 											span.innerHTML = item.address;
@@ -853,7 +1016,7 @@ function getScript(locale, callback) {
 											$(addressList).empty();
 											initAddressForm($(addressList), null);
 										});
-										addrListFooter.classList.add("button");
+										addrListFooter.setAttribute("class", "button");
 										addrListFooter.innerHTML = "a";
 										
 										addressesContainer.appendChild(addrListFooter);
@@ -864,9 +1027,8 @@ function getScript(locale, callback) {
 									}
 								});
 							}
-							
 							var element = document.createElement("div");
-							element.setAttribute("class", "row xmargin list");
+							element.setAttribute("class", "col full Xmargin");
 							
 							var span = document.createElement("span");
 							span.classList.add("title");
@@ -880,22 +1042,22 @@ function getScript(locale, callback) {
 							element.appendChild(span);
 							
 							var span = document.createElement("span");
-							$(span).attr("name", "npa");
+							$(span).attr("name", "npaTwn");
 							span.innerHTML = `${address.npa} ${address.town}`;
 							element.appendChild(span);
 							
 							var span = document.createElement("span");
-							$(span).attr("name", "country");
+							$(span).attr("name", "cnty");
 							span.innerHTML = address.country;
 							element.appendChild(span);
 							
 							var span = document.createElement("span");
-							$(span).attr("name", "phone");
+							$(span).attr("name", "ph");
 							span.innerHTML = address.phone;
 							element.appendChild(span);
 							
 							var addressSelect = document.createElement("a");
-							addressSelect.classList.add("button");
+							addressSelect.setAttribute("class", "button");
 							addressSelect.innerHTML = "m";
 							addressSelect.addEventListener("click", function() {
 								getUserAddresses();
@@ -903,7 +1065,7 @@ function getScript(locale, callback) {
 							element.appendChild(addressSelect);
 							
 							var row = document.createElement("div");
-							row.setAttribute("class", "row sb xmargin");
+							row.setAttribute("class", "row full sb Xmargin");
 							var button = document.createElement("a");
 							button.classList.add("button");
 							button.href = "/cart?step=1";
@@ -933,11 +1095,86 @@ function getScript(locale, callback) {
 			
 			// CASE OF CART STEP 3 (PAYMENT)
 			case /\/cart\?step=3/.test(path):
+				pageConfig("TBD", 1);
+				
+				var showForm;
+				
+				var container = document.createElement("div");
+				container.setAttribute("class", "row full Xmargin");
+				
+				var methodSelectContainer = document.createElement("div");
+				methodSelectContainer.setAttribute("class", "row full sa");
+				
+				var optionContainer = document.createElement("div");
+				optionContainer.setAttribute("class", "col");
+				var span = document.createElement("span");
+				span.innerHTML = "CB";
+				var input = document.createElement("input");
+				input.addEventListener("click", function() {
+					showForm();
+				});
+				input.type = "radio";
+				input.name = "method";
+				input.value = "cb";
+				input.checked = true;
+				optionContainer.appendChild(span);
+				optionContainer.appendChild(input);
+				methodSelectContainer.appendChild(optionContainer);
+				
+				var optionContainer = document.createElement("div");
+				optionContainer.setAttribute("class", "col");
+				var span = document.createElement("span");
+				span.innerHTML = "PP";
+				var input = document.createElement("input");
+				input.addEventListener("click", function() {
+					showForm();
+				});
+				input.type = "radio";
+				input.name = "method";
+				input.value = "pp";
+				optionContainer.appendChild(span);
+				optionContainer.appendChild(input);
+				methodSelectContainer.appendChild(optionContainer);
+				
+				container.appendChild(methodSelectContainer);
+				
+				var formContainer = document.createElement("div");
+				formContainer.id = "form";
+				formContainer.setAttribute("class", "col full");
+				container.appendChild(formContainer);
+				
+				
+				$("#content").append(container);
+				
+				showForm = function() {
+					$("#form").empty();
+					
+					switch($("[name=method]:checked").val()) {
+						case "cb":
+							var span = document.createElement("span");
+							span.innerHTML = "Carte bancaires";
+							$("#form").append(span);
+							
+							break;
+						
+						case "pp":
+							var span = document.createElement("span");
+							span.innerHTML = "Paypal";
+							$("#form").append(span);
+							
+							break;
+					}
+				}
+				
+				showForm();
+				
 				callback();
 				break;
 			
 			// CASE OF CART
 			case /\/cart/.test(path):
+				pageConfig("TBD", 1);
+				
 				document.location.href = `${location.pathname}?step=1`;
 				break;
 		
@@ -954,10 +1191,10 @@ function getScript(locale, callback) {
 			
 				// Product filter
 				var element = document.createElement("div");
-				element.setAttribute("class", "row xmargin list");
+				element.setAttribute("class", "row full Xmargin list");
 			
 				var row = document.createElement("div");
-				row.setAttribute("class", "row sb xmargin");
+				row.setAttribute("class", "row full sb Xmargin");
 				var input = document.createElement("input");
 				input.id = "filterProducts";
 				input.placeholder = "filtre produits (à faire)";
@@ -1043,7 +1280,7 @@ function getScript(locale, callback) {
 				// Adding new product
 				var element = document.createElement("div");
 				element.id = "newProduct";
-				element.setAttribute("class", "row xmargin list");
+				element.setAttribute("class", "row full Xmargin list");
 			
 				var row = document.createElement("div");
 				var span = document.createElement("span");
@@ -1119,7 +1356,7 @@ function getScript(locale, callback) {
 				$(element).hide();
 			
 				var element = document.createElement("div");
-				element.setAttribute("class", "row xmargin list");
+				element.setAttribute("class", "row full Xmargin list");
 				element.id = "productList";
 			
 				$("#content").append(element);
@@ -1156,10 +1393,10 @@ function getScript(locale, callback) {
 				pageConfig(`${locale["documentTitleManage_core"]} - ${locale["MMenuConfigLocFiles_core"]}`, 0);
 			
 				var element = document.createElement("div");
-				element.setAttribute("class", "row xmargin list");
+				element.setAttribute("class", "row full Xmargin list");
 			
 				var row = document.createElement("div");
-				row.setAttribute("class", "row sb xmargin");
+				row.setAttribute("class", "row full sb Xmargin");
 				var selectContainer = document.createElement("div");
 				selectContainer.setAttribute("class", "custom-select");
 				var select = document.createElement("select");
@@ -1187,7 +1424,7 @@ function getScript(locale, callback) {
 				$("#content").append(element);
 			
 				var element = document.createElement("div");
-				element.setAttribute("class", "row xmargin list");
+				element.setAttribute("class", "row full Xmargin list");
 				element.id = "keyList";
 			
 				$("#content").append(element);
@@ -1232,10 +1469,10 @@ function getScript(locale, callback) {
 				pageConfig(`${locale["documentTitleManage_core"]} - ${locale["MMenuProductsCat_core"]}`, 0);
 			
 				var element = document.createElement("div");
-				element.setAttribute("class", "row xmargin list");
+				element.setAttribute("class", "row full Xmargin list");
 			
 				var row = document.createElement("div");
-				row.setAttribute("class", "row sb xmargin");
+				row.setAttribute("class", "row full sb Xmargin");
 				var selectContainer = document.createElement("div");
 				selectContainer.setAttribute("class", "custom-select cat");
 				var select = document.createElement("select");
@@ -1259,7 +1496,7 @@ function getScript(locale, callback) {
 				$("#content").append(element);
 			
 				var element = document.createElement("div");
-				element.setAttribute("class", "row xmargin list");
+				element.setAttribute("class", "row full Xmargin list");
 				element.id = "catList";
 			
 				$("#content").append(element);
@@ -1462,7 +1699,7 @@ function showProductData(t, locale, product, loc, callback) {
 			
 			// Locale
 			var row = document.createElement("div");
-			row.setAttribute("class", "row sb xmargin align-left lang");
+			row.setAttribute("class", "row full sb Xmargin align-left lang");
 			var innerRow_node = document.createElement("div");
 			innerRow_node.setAttribute("class", "custom-select lang");
 			var select = document.createElement("select");
@@ -1495,7 +1732,7 @@ function showProductData(t, locale, product, loc, callback) {
 			
 			// Title
 			var row = document.createElement("div");
-			row.setAttribute("class", "row sb xmargin title");
+			row.setAttribute("class", "row full sb Xmargin title");
 			row.innerHTML = "<span>Titre</span>";
 			var innerRow_node = document.createElement("input");
 			innerRow_node.type = "text";
@@ -1507,7 +1744,7 @@ function showProductData(t, locale, product, loc, callback) {
 			
 			// Short description
 			var row = document.createElement("div");
-			row.setAttribute("class", "row sb xmargin title sdesc");
+			row.setAttribute("class", "row full sb Xmargin title sdesc");
 			row.innerHTML = "<span>Short Description</span>";
 			var innerRow_node = document.createElement("input");
 			innerRow_node.type = "text";
@@ -1519,7 +1756,7 @@ function showProductData(t, locale, product, loc, callback) {
 			
 			// Description
 			var row = document.createElement("div");
-			row.setAttribute("class", "row sb xmargin desc");
+			row.setAttribute("class", "row full sb Xmargin desc");
 			row.innerHTML = "<span>Description</span>";
 			var innerRow_node = document.createElement("textarea");
 			innerRow_node.name = product.description_id;
@@ -1530,7 +1767,7 @@ function showProductData(t, locale, product, loc, callback) {
 			
 			// Categories
 			var row = document.createElement("div");
-			row.setAttribute("class", "row sb xmargin cat");
+			row.setAttribute("class", "row full sb Xmargin cat");
 			row.innerHTML = "<span>Catégorie</span>";
 			var innerRow_node = document.createElement("div");
 			innerRow_node.setAttribute("class", "custom-select cat");
@@ -1588,7 +1825,7 @@ function showProductData(t, locale, product, loc, callback) {
 			
 			// Price
 			var row = document.createElement("div");
-			row.setAttribute("class", "row sb xmargin price");
+			row.setAttribute("class", "row full sb Xmargin price");
 			row.innerHTML = "<span>Price</span>";
 			var innerRow_node = document.createElement("input");
 			innerRow_node.type = "number";
@@ -1600,7 +1837,7 @@ function showProductData(t, locale, product, loc, callback) {
 			
 			// Image select
 			var row = document.createElement("div");
-			row.setAttribute("class", "row sb xmargin img");
+			row.setAttribute("class", "row full sb Xmargin img");
 			var input = document.createElement("input")
 			input.classList.add("img-select");
 			input.setAttribute("accept", "image/*");
@@ -1656,25 +1893,25 @@ function showProductData(t, locale, product, loc, callback) {
 			
 			// Update button
 			var row = document.createElement("div");
-			row.setAttribute("class", "row sb xmargin align-right");
+			row.setAttribute("class", "row full sb Xmargin align-right");
 			var uButton = document.createElement("button");
 			uButton.value = product.id;
 			uButton.innerHTML = locale["MAdd_core"];
 			// Update product
 			uButton.addEventListener("click", function() {
 				var img = [];
-				$(this).parent().siblings('[class="row sb xmargin img"]').find(".custom-img-select div").each((k, i) => {
+				$(this).parent().siblings('[class="row full sb Xmargin img"]').find(".custom-img-select div").each((k, i) => {
 					img.push($(i).children(":first-child").attr("src"));
 				});
 				common.sendRequest(messages.UPDATE_PRODUCT_DATA_REQUEST, {
 					id: $(this).val(),
 					img: sortImages(product.img, img),
-					title: encodeURIComponent($(this).parent().siblings('[class="row sb xmargin title"]').children("input").val()),
-					short_description: encodeURIComponent($(this).parent().siblings('[class="row sb xmargin sdesc"]').children("textarea").val()),
-					description: encodeURIComponent($(this).parent().siblings('[class="row sb xmargin desc"]').children("textarea").val()),
-					category: $(this).parent().siblings('[class="row sb xmargin cat"]').find("select").val(),
-					price: $(this).parent().siblings('[class="row sb xmargin price"]').children("input").val(),
-					loc: $(this).parent().siblings('[class="row sb xmargin align-left lang"]').find("select").val()
+					title: encodeURIComponent($(this).parent().siblings('[class*=title]').children("input").val()),
+					short_description: encodeURIComponent($(this).parent().siblings('[class*=sdesc]').children("textarea").val()),
+					description: encodeURIComponent($(this).parent().siblings('[class*=desc]').children("textarea").val()),
+					category: $(this).parent().siblings('[class*=cat]').find("select").val(),
+					price: $(this).parent().siblings('[class*=price]').children("input").val(),
+					loc: $(this).parent().siblings('[class*=lang]').find("select").val()
 				});
 			});
 			
@@ -1700,10 +1937,10 @@ function showProducts(locale, products) {
 	
 	for(const [k, v] of Object.entries(products)) {
 		var product_node = document.createElement("div");
-		product_node.setAttribute("class", "row xmargin list");
+		product_node.setAttribute("class", "row full Xmargin list");
 		
 		var productHeader_node = document.createElement("div");
-		productHeader_node.setAttribute("class", "row sb xmargin productHeader clickable");
+		productHeader_node.setAttribute("class", "row full sb Xmargin productHeader clickable");
 		productHeader_node.innerHTML = "<span>" + decodeURIComponent(v.title) + "</span>";
 		productHeader_node.addEventListener("click", function() {
 			if(!$(this).next("div").is(":visible")) {
@@ -1832,10 +2069,10 @@ function showLocaleKeyValuePair(locale) {
 			
 				$.each(content, function(k, v) {
 					var elem_node = document.createElement("div");
-					$(elem_node).attr("class", "row xmargin list");
+					$(elem_node).attr("class", "row full Xmargin list");
 
 					var col_node = document.createElement("div");
-					$(col_node).attr("class", "row sb xmargin");
+					$(col_node).attr("class", "row full sb Xmargin");
 
 					var key_node = document.createElement("span");
 					key_node.innerHTML = k;
@@ -1924,7 +2161,7 @@ function showCatKeyValuePair(locale, parent, loc) {
 		
 				$.each(response.payload.categories, function(k, v) {
 					var subCat_node = document.createElement("div");
-					$(subCat_node).attr("class", "row xmargin list");
+					$(subCat_node).attr("class", "row full Xmargin list");
 	
 					var subCatRow_node = document.createElement("div");
 					var input = document.createElement("input");
@@ -1976,7 +2213,7 @@ function showCatKeyValuePair(locale, parent, loc) {
 				});
 				
 				var subCat_node = document.createElement("div");
-				$(subCat_node).attr("class", "row xmargin list");
+				$(subCat_node).attr("class", "row full Xmargin list");
 
 				var subCatRow_node = document.createElement("div");
 				var input = document.createElement("input");
@@ -2027,7 +2264,7 @@ function showSubCategories(locale) {
 			var files = response.payload.files;
 			
 			var row_node = document.createElement("div");
-			$(row_node).attr("class", "row sb xmargin");
+			$(row_node).attr("class", "row full sb Xmargin");
 			
 			var customSelect_node = document.createElement("div");
 			customSelect_node.setAttribute("class", "custom-select lang");
@@ -2047,7 +2284,7 @@ function showSubCategories(locale) {
 			
 			var subCatList_node = document.createElement("div");
 			subCatList_node.id = "subCatList";
-			subCatList_node.setAttribute("class", "row xmargin list");
+			subCatList_node.setAttribute("class", "row full Xmargin list");
 			
 			// TODO Get selected parent cat
 			var input = document.createElement("input");
@@ -2373,7 +2610,7 @@ function addCartComponent(product, amount) {
 	productLink.appendChild(productInfo);
 	
 	var productRemove = document.createElement("template-remove");
-	productRemove.setAttribute("class", "remove");
+	productRemove.setAttribute("class", "cardButton");
 	$(productRemove).attr({
 		"weight": 0.0625,
 		"size": 1.25,
@@ -2422,7 +2659,7 @@ function pageConfig(title, ltype) {
 							clearTimeout(keepAliveInterval);
 						}
 					});
-				}, 5000);
+				}, 1000*60*10 - 1000*30);
 			}
 		});
 		
@@ -2444,7 +2681,7 @@ function pageConfig(title, ltype) {
 							clearTimeout(keepAliveInterval);
 						}
 					});
-				}, 5000);
+				}, 1000*60*10 - 1000*30);
 			}
 		});
 	}
@@ -2494,16 +2731,73 @@ function updateRemoveTemplate(elem) {
         	width: `${strokeSize}rem`,
             "border-width": `${weight}rem`,
             "border-color": color,
-            "borderRadius": `${weight}rem`
-        });
-		$(item).css({
+            "borderRadius": `${weight}rem`,
 			left: `${margin}rem`,
 			top: `calc(50% - ${weight}rem)`
-		})
+        });
 	});
 }
 
 customElements.define("template-remove", TemplateRemove);
+
+class TemplateBack extends HTMLElement {
+	constructor() {
+		super();
+		
+		var shadow = this.attachShadow({mode: "open"});
+		
+		var span = document.createElement("span");
+		span.style.position = "absolute";
+		span.style.height = "0rem";
+		span.style.border = "solid";
+		shadow.appendChild(span);
+		
+		var span = document.createElement("span");
+		span.style.position = "absolute";
+		span.style.height = "0rem";
+		span.style.border = "solid";
+		shadow.appendChild(span);
+	}
+	
+	connectedCallback() {
+		updateBackTemplate(this);
+	}
+}
+
+function updateBackTemplate(elem) {
+	var weight = parseFloat(elem.getAttribute("weight"));
+	var size = parseFloat(elem.getAttribute("size"));
+	var color = elem.getAttribute("color");
+    var margin = parseFloat(elem.getAttribute("margin"));
+    var angle = parseFloat(elem.getAttribute("angle"));
+    
+    var a = angle / -2;
+    
+    $(elem).css({
+    	position: "relative",
+    	width: `${size}rem`,
+        height: `${size}rem`
+    });
+    
+	elem.shadowRoot.childNodes.forEach(item => {
+    	var rad = a * Math.PI / 180;
+    	var strokeSize = (size/1.1 - (margin*2 + weight*2)) * Math.abs(Math.sin(rad));
+        console.log((strokeSize/2) * Math.sin(rad) - weight);
+        $(item).css({
+        	width: `${strokeSize}rem`,
+            "border-width": `${weight}rem`,
+            "border-color": color,
+            "borderRadius": `${weight}rem`,
+			left: `calc(50% - ${strokeSize/2 + weight}rem)`,
+			top: `calc(50% + ${(strokeSize/2 + weight/2) * Math.sin(rad) - weight}rem)`,
+            transform: `rotate(${a}deg)`
+        });
+        
+        a += angle;
+	});
+}
+
+customElements.define("template-back", TemplateBack);
 
 /**********************************************************************
 |                            DOCUMENT READY                           |
